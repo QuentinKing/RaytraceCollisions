@@ -37,6 +37,9 @@
     <Filter Include="Passes">
       <UniqueIdentifier>{669d2060-6c3e-4a8e-9dac-b1db09d1bf57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{0ff37f17-51d2-4d16-8f6c-e859e4f91061}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\SharedUtils\FullscreenLaunch.h">
@@ -66,5 +69,10 @@
     <ClInclude Include="Passes\ConstantColorPass.h">
       <Filter>Passes</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\Shaders\custom.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
