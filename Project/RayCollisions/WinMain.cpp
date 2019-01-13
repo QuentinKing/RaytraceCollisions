@@ -1,6 +1,6 @@
 #include "Falcor.h"
 #include "../SharedUtils/RenderingPipeline.h"
-#include "Passes/ConstantColorPass.h"
+#include "Passes/CustomPass.h"
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
@@ -8,7 +8,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	RenderingPipeline *pipeline = new RenderingPipeline();
 
 	// Add passes into our pipeline
-	pipeline->setPass(0, ConstantColorPass::create());   // Displays a user-selectable color on the screen
+	pipeline->setPass(0, CustomPass::create());   // Displays a user-selectable color on the screen
 
 	// Define a set of config / window parameters for our program
 	SampleConfig config;

@@ -1,6 +1,6 @@
-#include "ConstantColorPass.h"
+#include "CustomPass.h"
 
-bool ConstantColorPass::initialize(RenderContext* pRenderContext, ResourceManager::SharedPtr pResManager)
+bool CustomPass::initialize(RenderContext* pRenderContext, ResourceManager::SharedPtr pResManager)
 {
 	// Stash a copy of our resource manager, allowing us to access shared rendering resources
 	//    We need an output buffer; tell our resource manager we expect the standard output channel
@@ -14,14 +14,14 @@ bool ConstantColorPass::initialize(RenderContext* pRenderContext, ResourceManage
     return true;  // Successful initialization.
 }
 
-void ConstantColorPass::renderGui(Gui* pGui)
+void CustomPass::renderGui(Gui* pGui)
 {
 	// Add widgets in our options panel to fine tune properties during run-time
 	pGui->addFloat3Var("Custom Color", mConstColor, 0.0f, 1.0f);
 	pGui->addFloatVar("Sin Intensity", mScaleValue, 0.0f, 1.0f, 0.000001f);
 }
 
-void ConstantColorPass::execute(RenderContext* pRenderContext)
+void CustomPass::execute(RenderContext* pRenderContext)
 {
 	// Create a framebuffer object to render to.  Done here once per frame for simplicity, not performance.
 	// This function allows us provide a list of managed texture names, which get combined into an FBO

@@ -3,20 +3,20 @@
 #include "../SharedUtils/RenderPass.h" // This is the header including the base RenderPass class
 #include "../SharedUtils/FullscreenLaunch.h"
 
-class ConstantColorPass : public ::RenderPass, inherit_shared_from_this<::RenderPass, ConstantColorPass>
+class CustomPass : public ::RenderPass, inherit_shared_from_this<::RenderPass, CustomPass>
 {
 public:
-    using SharedPtr = std::shared_ptr<ConstantColorPass>;
+    using SharedPtr = std::shared_ptr<CustomPass>;
 
 	// Our simple constructor and destructor
-	static SharedPtr create() { return SharedPtr(new ConstantColorPass()); }
-    virtual ~ConstantColorPass() = default;
+	static SharedPtr create() { return SharedPtr(new CustomPass()); }
+    virtual ~CustomPass() = default;
 
 protected:
 	// Constructor.  The strings represent:
 	//     1) The name of the pass that will be in the dropdown pass selector widget(s)
 	//     2) The name of the GUI window showing widget controls for this pass
-	ConstantColorPass() : ::RenderPass("Custom Render Pass", "Custom Pass Options") {}
+	CustomPass() : ::RenderPass("Custom Render Pass", "Custom Pass Options") {}
 	
 	// The initialize() callback will be invoked when this class is instantiated and bound to a pipeline
     bool initialize(RenderContext* pRenderContext, ResourceManager::SharedPtr pResManager) override;

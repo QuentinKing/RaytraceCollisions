@@ -96,7 +96,7 @@
     <ClCompile Include="..\SharedUtils\ResourceManager.cpp" />
     <ClCompile Include="..\SharedUtils\SceneLoaderWrapper.cpp" />
     <ClCompile Include="..\SharedUtils\SimpleVars.cpp" />
-    <ClCompile Include="Passes\ConstantColorPass.cpp" />
+    <ClCompile Include="Passes\CustomPass.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -108,7 +108,7 @@
     <ClInclude Include="..\SharedUtils\ResourceManager.h" />
     <ClInclude Include="..\SharedUtils\SceneLoaderWrapper.h" />
     <ClInclude Include="..\SharedUtils\SimpleVars.h" />
-    <ClInclude Include="Passes\ConstantColorPass.h" />
+    <ClInclude Include="Passes\CustomPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\Shaders\custom.hlsl">

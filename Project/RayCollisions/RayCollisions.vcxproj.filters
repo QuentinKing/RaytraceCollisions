@@ -26,7 +26,7 @@
     <ClCompile Include="..\SharedUtils\SimpleVars.cpp">
       <Filter>SharedUtils</Filter>
     </ClCompile>
-    <ClCompile Include="Passes\ConstantColorPass.cpp">
+    <ClCompile Include="Passes\CustomPass.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,7 +66,7 @@
     <ClInclude Include="..\SharedUtils\SimpleVars.h">
       <Filter>SharedUtils</Filter>
     </ClInclude>
-    <ClInclude Include="Passes\ConstantColorPass.h">
+    <ClInclude Include="Passes\CustomPass.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>
