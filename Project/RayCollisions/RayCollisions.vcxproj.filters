@@ -26,7 +26,13 @@
     <ClCompile Include="..\SharedUtils\SimpleVars.cpp">
       <Filter>SharedUtils</Filter>
     </ClCompile>
-    <ClCompile Include="Passes\CustomPass.cpp">
+    <ClCompile Include="Passes\GBufferPass.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Passes\WriteToOutputPass.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Passes\RaytraceGBufferPass.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,12 +72,24 @@
     <ClInclude Include="..\SharedUtils\SimpleVars.h">
       <Filter>SharedUtils</Filter>
     </ClInclude>
-    <ClInclude Include="Passes\CustomPass.h">
+    <ClInclude Include="Passes\GBufferPass.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Passes\WriteToOutputPass.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Passes\RaytraceGBufferPass.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\Shaders\custom.hlsl">
+    <None Include="Data\Shaders\gBufferFrag.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Data\Shaders\gBufferVert.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Data\Shaders\raytraceGBuffer.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

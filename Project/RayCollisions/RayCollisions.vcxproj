@@ -96,7 +96,9 @@
     <ClCompile Include="..\SharedUtils\ResourceManager.cpp" />
     <ClCompile Include="..\SharedUtils\SceneLoaderWrapper.cpp" />
     <ClCompile Include="..\SharedUtils\SimpleVars.cpp" />
-    <ClCompile Include="Passes\CustomPass.cpp" />
+    <ClCompile Include="Passes\GBufferPass.cpp" />
+    <ClCompile Include="Passes\RaytraceGBufferPass.cpp" />
+    <ClCompile Include="Passes\WriteToOutputPass.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -108,12 +110,24 @@
     <ClInclude Include="..\SharedUtils\ResourceManager.h" />
     <ClInclude Include="..\SharedUtils\SceneLoaderWrapper.h" />
     <ClInclude Include="..\SharedUtils\SimpleVars.h" />
-    <ClInclude Include="Passes\CustomPass.h" />
+    <ClInclude Include="Passes\GBufferPass.h" />
+    <ClInclude Include="Passes\RaytraceGBufferPass.h" />
+    <ClInclude Include="Passes\WriteToOutputPass.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\Shaders\custom.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    <None Include="Data\Shaders\gBufferFrag.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Data\Shaders\gBufferVert.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\Shaders\raytraceGBuffer.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
