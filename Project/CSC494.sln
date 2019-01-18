@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FalcorSharedObjects", "Falc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayCollisions", "RayCollisions\RayCollisions.vcxproj", "{94F4752D-781A-41A0-87BC-1254370EE50B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SceneEditor", "Falcor\Samples\Utils\SceneEditor\SceneEditor.vcxproj", "{DE6A0005-923E-4007-B58C-3C35F690773F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -63,6 +65,20 @@ Global
 		{94F4752D-781A-41A0-87BC-1254370EE50B}.ReleaseD3D12|x64.Build.0 = Release|x64
 		{94F4752D-781A-41A0-87BC-1254370EE50B}.ReleaseD3D12|x86.ActiveCfg = Release|x64
 		{94F4752D-781A-41A0-87BC-1254370EE50B}.ReleaseD3D12|x86.Build.0 = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Debug|x64.ActiveCfg = Debug|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Debug|x64.Build.0 = Debug|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Debug|x86.ActiveCfg = Debug|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.DebugD3D12|x64.ActiveCfg = Debug|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.DebugD3D12|x64.Build.0 = Debug|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.DebugD3D12|x86.ActiveCfg = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.DebugD3D12|x86.Build.0 = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Release|x64.ActiveCfg = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Release|x64.Build.0 = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.Release|x86.ActiveCfg = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.ReleaseD3D12|x64.ActiveCfg = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.ReleaseD3D12|x64.Build.0 = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.ReleaseD3D12|x86.ActiveCfg = Release|x64
+		{DE6A0005-923E-4007-B58C-3C35F690773F}.ReleaseD3D12|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
