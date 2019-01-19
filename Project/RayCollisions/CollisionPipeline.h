@@ -9,5 +9,8 @@ public:
 	static SharedPtr create() { return SharedPtr(new CollisionPipeline()); }
 	virtual ~CollisionPipeline() = default;
 
+	virtual void onLoad(SampleCallbacks* pSample, const RenderContext::SharedPtr &pRenderContext) override;
+
 protected:
+	const std::string mdefaultScenePath = "Data\\demo_scene\\demo_scene.fscene";
 };

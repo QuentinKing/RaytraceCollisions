@@ -81,8 +81,12 @@ protected:
 	*/
 	void addPipeInstructions(const std::string &str);
 
-private:
+	// Update the mPipeRequires* member variables
+	void updatePipelineRequirementFlags(void);
 
+	ResourceManager::SharedPtr mpResourceManager;
+
+private:
 	// On the first execution of onFrameRender(), we're calling this
 	void onFirstRun(SampleCallbacks* pSample);
 
@@ -108,9 +112,6 @@ private:
 	// Check if any passes have set a refresh flag (i.e., settings changed; temporal history should be invalidated)
 	bool havePassesSetRefreshFlag(void);
 
-	// Update the mPipeRequires* member variables
-	void updatePipelineRequirementFlags(void);
-
 	// Extract profiling data
 	void extractProfilingData(void);
 
@@ -132,7 +133,6 @@ private:
 	bool mUseSceneCameraPath = false;
 	bool mFreezeTime = true;
 	bool mGlobalPipeRefresh = false;
-	ResourceManager::SharedPtr mpResourceManager;
 	int32_t mOutputBufferIndex = 0;
 	Scene::SharedPtr mpScene = nullptr;                     ///< Stash a copy of our scene
 	CameraController::SharedPtr mpCameraControl;
