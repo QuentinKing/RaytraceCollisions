@@ -3,13 +3,14 @@
 #include "Passes/GBufferPass.h"
 #include "Passes/WriteToOutputPass.h"
 #include "Passes/RaytraceGBufferPass.h"
+#include "CollisionPipeline.h"
 
 #define USE_RAYTRACING true
 
 /* Main entry point of the program */
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-	RenderingPipeline *pipeline = new RenderingPipeline();
+	CollisionPipeline *pipeline = new CollisionPipeline();
 
 	if (USE_RAYTRACING)
 	{
@@ -30,5 +31,5 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	config.windowDesc.resizableWindow = true;
 
 	// Run!
-	RenderingPipeline::run(pipeline, config);
+	CollisionPipeline::run(pipeline, config);
 }

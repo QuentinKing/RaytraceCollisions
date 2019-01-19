@@ -96,6 +96,7 @@
     <ClCompile Include="..\SharedUtils\ResourceManager.cpp" />
     <ClCompile Include="..\SharedUtils\SceneLoaderWrapper.cpp" />
     <ClCompile Include="..\SharedUtils\SimpleVars.cpp" />
+    <ClCompile Include="CollisionPipeline.cpp" />
     <ClCompile Include="Passes\GBufferPass.cpp" />
     <ClCompile Include="Passes\RaytraceGBufferPass.cpp" />
     <ClCompile Include="Passes\WriteToOutputPass.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="..\SharedUtils\ResourceManager.h" />
     <ClInclude Include="..\SharedUtils\SceneLoaderWrapper.h" />
     <ClInclude Include="..\SharedUtils\SimpleVars.h" />
+    <ClInclude Include="CollisionPipeline.h" />
     <ClInclude Include="Passes\GBufferPass.h" />
     <ClInclude Include="Passes\RaytraceGBufferPass.h" />
     <ClInclude Include="Passes\WriteToOutputPass.h" />

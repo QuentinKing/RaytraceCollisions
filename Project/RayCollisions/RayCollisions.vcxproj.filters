@@ -35,6 +35,7 @@
     <ClCompile Include="Passes\RaytraceGBufferPass.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
+    <ClCompile Include="CollisionPipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SharedUtils">
@@ -81,6 +82,7 @@
     <ClInclude Include="Passes\RaytraceGBufferPass.h">
       <Filter>Passes</Filter>
     </ClInclude>
+    <ClInclude Include="CollisionPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\Shaders\gBufferFrag.hlsl">
