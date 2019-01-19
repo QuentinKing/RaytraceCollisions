@@ -13,7 +13,7 @@ bool RaytraceGBufferPass::initialize(RenderContext* pRenderContext, ResourceMana
 {
 	mpResManager = pResManager;
 	mpResManager->requestTextureResources({ "MaterialDiffuse", "WorldPosition", "WorldNormal", "MaterialSpecular", "Emissive" });
-	mpResManager->setDefaultSceneName("Data\\pink_room\\pink_room.fscene");
+	mpResManager->setDefaultSceneName("Data\\demo_scene\\demo_scene.fscene");
 
 	// Setup shader entry points
 	mpRays = RayLaunch::create("Shaders\\raytraceGBuffer.hlsl", kEntryPointRayGen);

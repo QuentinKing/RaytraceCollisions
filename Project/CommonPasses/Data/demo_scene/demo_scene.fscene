@@ -1,0 +1,77 @@
+{
+    "version": 2,
+    "camera_speed": 1.0,
+    "lighting_scale": 1.0,
+    "active_camera": "Camera0",
+    "models": [
+        {
+            "file": "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\Project\\CommonPasses\\Data\\demo_scene\\test.fbx",
+            "name": "test",
+            "material": {
+                "shading_model": "metal_rough"
+            },
+            "instances": [
+                {
+                    "name": "test0",
+                    "translation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scaling": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        -0.0
+                    ]
+                }
+            ]
+        }
+    ],
+    "lights": [
+        {
+            "name": "DirLight0",
+            "type": "dir_light",
+            "intensity": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "direction": [
+                0.304206907749176,
+                -0.34002840518951418,
+                0.889853298664093
+            ]
+        }
+    ],
+    "cameras": [
+        {
+            "name": "Camera0",
+            "pos": [
+                0.0,
+                0.0,
+                -5.0
+            ],
+            "target": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
+            "focal_length": 21.0,
+            "depth_range": [
+                0.10000000149011612,
+                1000.0
+            ],
+            "aspect_ratio": 1.7776999473571778
+        }
+    ]
+}
