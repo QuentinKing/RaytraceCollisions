@@ -7,3 +7,10 @@ void CollisionPipeline::onLoad(SampleCallbacks* pSample, const RenderContext::Sh
 	mpResourceManager->setDefaultSceneName(mdefaultScenePath);
 	updatePipelineRequirementFlags();
 }
+
+void CollisionPipeline::onFirstRun(SampleCallbacks* pSample)
+{
+	RenderingPipeline::onFirstRun(pSample);
+
+	rtScene = std::dynamic_pointer_cast<RtScene>(mpScene);
+}

@@ -84,11 +84,13 @@ protected:
 	// Update the mPipeRequires* member variables
 	void updatePipelineRequirementFlags(void);
 
+	// On the first execution of onFrameRender(), we're calling this
+	virtual void onFirstRun(SampleCallbacks* pSample);
+
 	ResourceManager::SharedPtr mpResourceManager;
+	Scene::SharedPtr mpScene = nullptr;
 
 private:
-	// On the first execution of onFrameRender(), we're calling this
-	void onFirstRun(SampleCallbacks* pSample);
 
 	// Want to remove a pass from the list?  
 	void removePassFromPipeline(uint32_t passNum);
@@ -134,7 +136,6 @@ private:
 	bool mFreezeTime = true;
 	bool mGlobalPipeRefresh = false;
 	int32_t mOutputBufferIndex = 0;
-	Scene::SharedPtr mpScene = nullptr;                     ///< Stash a copy of our scene
 	CameraController::SharedPtr mpCameraControl;
 	GraphicsState::SharedPtr mpDefaultGfxState;
 	std::vector< std::string > mPipeDescription;            ///< Can store a description of the pipeline for display in the UI
