@@ -17,4 +17,7 @@ protected:
 
 	const std::string			mdefaultScenePath = "Data\\demo_scene\\demo_scene.fscene";
 	RtScene::SharedPtr          rtScene = nullptr;
+
+private:
+	void createTempInstances(uint32_t modelIndex);
 };
