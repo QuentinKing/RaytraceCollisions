@@ -67,7 +67,10 @@ public:
 protected:
 	/** When a new scene is loaded, this gets called to let any passes in this pipeline know there's a new scene.
 	*/
-	void onInitNewScene(RenderContext* pRenderContext, Scene::SharedPtr pScene);
+	virtual void onInitNewScene(RenderContext* pRenderContext, Scene::SharedPtr pScene);
+
+	// On the first execution of onFrameRender(), we're calling this
+	virtual void onFirstRun(SampleCallbacks* pSample);
 
     /** Returns an ordered list of currently active passes without gaps.
     */
@@ -84,13 +87,8 @@ protected:
 	// Update the mPipeRequires* member variables
 	void updatePipelineRequirementFlags(void);
 
-	// On the first execution of onFrameRender(), we're calling this
-	virtual void onFirstRun(SampleCallbacks* pSample);
-
 	ResourceManager::SharedPtr mpResourceManager;
 	Scene::SharedPtr mpScene = nullptr;
-
-private:
 
 	// Want to remove a pass from the list?  
 	void removePassFromPipeline(uint32_t passNum);
@@ -130,7 +128,7 @@ private:
 	bool mPipelineChanged = true;                           ///< A flag to keep track of pipeline changes
 	bool mIsInitialized = false;
 	bool mDoProfiling = false;
-    bool mProfileToggle = false;
+	bool mProfileToggle = false;
 	bool mFirstFrame = true;
 	bool mUseSceneCameraPath = false;
 	bool mFreezeTime = true;
@@ -141,24 +139,24 @@ private:
 	std::vector< std::string > mPipeDescription;            ///< Can store a description of the pipeline for display in the UI
 	std::vector< HashedString > mProfileNames;
 	std::vector< double > mProfileGPUTimes;
-    std::vector< double > mProfileLastGPUTimes;
+	std::vector< double > mProfileLastGPUTimes;
 
 	// Are we storing an environment map?
 	Gui::DropdownList mEnvMapSelector;
 
 	// These are Chris-specific things...  He likes particular HDR lightprobes and inserts default menu options to load them
-	bool mHasMonValley = false; 
+	bool mHasMonValley = false;
 	std::string mMonValleyFilename;
 
 	// Whenever the pipeline changes, we query to see if any passes have the following properties
-	bool mPipeRequiresScene      = false;
-	bool mPipeRequiresRaster     = false;
+	bool mPipeRequiresScene = false;
+	bool mPipeRequiresRaster = false;
 	bool mPipeRequiresRayTracing = false;
 	bool mPipeAppliesPostprocess = false;
-	bool mPipeUsesCompute        = false;
-	bool mPipeUsesEnvMap         = false;
-	bool mPipeNeedsDefaultScene  = false;
-	bool mPipeHasAnimation       = true;
+	bool mPipeUsesCompute = false;
+	bool mPipeUsesEnvMap = false;
+	bool mPipeNeedsDefaultScene = false;
+	bool mPipeHasAnimation = true;
 
 	// Helpers to clarify code querying if a pass can be removed (or another can be added after it)
 	bool canRemovePass(uint32_t passNum);
@@ -169,5 +167,5 @@ private:
 	float             mMinTArray[8] = { 0.1f, 0.01f, 0.001f, 1e-4f, 1e-5f, 1e-6f, 1e-7f, 0.0f };
 	uint32_t          mMinTSelection = 3;
 
-    std::string mTmpStr = "";
+	std::string mTmpStr = "";
 };

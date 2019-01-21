@@ -12,6 +12,7 @@ public:
 	virtual void onLoad(SampleCallbacks* pSample, const RenderContext::SharedPtr &pRenderContext) override;
 
 protected:
+	virtual void onInitNewScene(RenderContext* pRenderContext, Scene::SharedPtr pScene) override;
 	virtual void onFirstRun(SampleCallbacks* pSample) override;
 
 	const std::string			mdefaultScenePath = "Data\\demo_scene\\demo_scene.fscene";
