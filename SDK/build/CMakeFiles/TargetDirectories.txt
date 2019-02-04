@@ -1,4 +1,0 @@
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/build/CMakeFiles/ALL_BUILD.dir
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/build/CMakeFiles/ZERO_CHECK.dir
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/build/optixTutorial/CMakeFiles/optixTutorial.dir
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/build/sutil/CMakeFiles/sutil_sdk.dir

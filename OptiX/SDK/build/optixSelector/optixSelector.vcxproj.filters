@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\optixSelector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\checkerboard.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\constantbg.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\pinhole_camera.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\selector_example.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\optixSelector\sphere.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CUDA Files">
+      <UniqueIdentifier>{8AD2EB89-F09C-3EF3-8FF7-E0BC9CDBCCCD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{BEA03121-23AD-39D9-A41A-C3F1FE7DD121}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{7C6DA200-3270-3772-BDFF-5C38355341E6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

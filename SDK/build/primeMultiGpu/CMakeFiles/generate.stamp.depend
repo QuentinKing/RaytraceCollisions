@@ -1,4 +1,0 @@
-# CMake generation dependency list for this directory.
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/CMake/FindCUDA/run_nvcc.cmake
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/build/primeMultiGpu/CMakeFiles/primeMultiGpu.dir/__/primeSimple/primeMultiGpu_generated_primeKernels.cu.obj.depend
-C:/ProgramData/NVIDIA Corporation/OptiX/SDK/primeMultiGpu/CMakeLists.txt
