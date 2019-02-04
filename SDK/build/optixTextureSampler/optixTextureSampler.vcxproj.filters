@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\ProgramData\NVIDIA Corporation\OptiX\SDK\optixTextureSampler\optixTextureSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\ProgramData\NVIDIA Corporation\OptiX\SDK\optixTextureSampler\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\ProgramData\NVIDIA Corporation\OptiX\SDK\optixTextureSampler\draw_texture.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CUDA Files">
+      <UniqueIdentifier>{35BCC5B0-E46A-394C-A78B-06BCB4FAF99E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{EC0AB6C6-AC19-394F-81A3-A165CB767BB3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
