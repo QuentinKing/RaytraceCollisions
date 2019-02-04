@@ -26,7 +26,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+include_directories(${GLUT_INCLUDE_DIR})
+add_definitions(-DGLUT_FOUND -DGLUT_NO_LIB_PRAGMA)
+
 # See top level CMakeLists.txt file for documentation of OPTIX_add_sample_executable.
-OPTIX_add_sample_executable(CSC494
+OPTIX_add_sample_executable( CSC494
+
+  # Source file
   CSC494.cpp
-  )
+
+  # Headers
+  commonStructs.h
+  random.h
+  tutorial.h
+
+  # Cuda Files
+  ray_scene.cu
+  sphere_model.cu
+  box.cu
+  parallelogram.cu
+  tutorial0.cu
+)

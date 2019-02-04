@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2018 NVIDIA CORPORATION. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,7 +98,7 @@ bool         use_pbo = true;
 
 std::string  texture_path;
 const char*  tutorial_ptx;
-int          tutorial_number = 10;
+int          tutorial_number = 0;
 
 // Camera state
 float3       camera_up;
@@ -228,7 +228,7 @@ void createContext()
         // One channel 3D noise in [0.0, 1.0] range.
         *tex_data++ = rand_range(0.0f, 1.0f);
     }
-    noiseBuffer->unmap(); 
+    noiseBuffer->unmap();
 
 
     // Noise texture sampler
@@ -443,7 +443,7 @@ void setupCamera()
 void setupLights()
 {
 
-    BasicLight lights[] = { 
+    BasicLight lights[] = {
         { make_float3( -5.0f, 60.0f, -16.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
     };
 
@@ -683,7 +683,7 @@ int main( int argc, char** argv )
                 printUsageAndExit( argv[0] );
             }
             out_file = argv[++i];
-        } 
+        }
         else if( arg == "-n" || arg == "--nopbo"  )
         {
             use_pbo = false;
