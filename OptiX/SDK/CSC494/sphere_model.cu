@@ -34,6 +34,7 @@ rtDeclareVariable(float4, sphere, , );
 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float2, t_values, attribute t_values, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 template<bool use_robust_method>
@@ -73,16 +74,26 @@ void intersect_sphere(void)
 			}
 		}
 
+		// Sphere may have two different solutions, gotta check both
 		bool check_second = true;
-		if (rtPotentialIntersection(root1 + root11)) {
+		float t1 = root1 + root11;
+		float t2 = (-b + sdisc) + (do_refine ? root1 : 0);
+		float2 a = make_float2(t1, t2);
+
+		if (rtPotentialIntersection(t1)) 
+		{
+			t_values = a;
 			shading_normal = geometric_normal = (O + (root1 + root11)*D) / radius;
 			if (rtReportIntersection(0))
 				check_second = false;
 		}
-		if (check_second) {
-			float root2 = (-b + sdisc) + (do_refine ? root1 : 0);
-			if (rtPotentialIntersection(root2)) {
-				shading_normal = geometric_normal = (O + root2 * D) / radius;
+
+		if (check_second) 
+		{
+			if (rtPotentialIntersection(t2)) 
+			{
+				t_values = a;
+				shading_normal = geometric_normal = (O + t2 * D) / radius;
 				rtReportIntersection(0);
 			}
 		}

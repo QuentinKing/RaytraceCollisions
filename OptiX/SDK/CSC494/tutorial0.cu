@@ -29,6 +29,7 @@
 #include "tutorial.h"
 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float2, t_values, attribute t_values, );
 
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
@@ -109,6 +110,13 @@ RT_PROGRAM void closest_hit_radiance0()
 	prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
 }
 
+//
+// Returns shading normal as the surface shading result
+// 
+RT_PROGRAM void test_t_values()
+{
+	prd_radiance.result = normalize(make_float3(t_values.x, 0.0f, t_values.y));
+}
 
 //
 // Set pixel to solid color upon failur

@@ -23,40 +23,34 @@
 
 using namespace optix;
 
+//------------------------------------------------------------------------------
+//
 // Globals
+//
+//------------------------------------------------------------------------------
+
 const char* const PROJECT_NAME = "CSC494";
-unsigned frame_count = 0;
-Geometry sphere;
-
-enum CameraType
-{
-	Perspective = 0,
-	Orthographic = 1
-};
-const CameraType cameraType = CameraType::Orthographic;
-
-
-static float rand_range(float min, float max)
-{
-	static unsigned int seed = 0u;
-	return min + (max - min) * rnd(seed);
-}
-
-
-//------------------------------------------------------------------------------
-//
-// Globals
-//
-//------------------------------------------------------------------------------
 
 Context      context;
 uint32_t     width = 1080u;
 uint32_t     height = 720;
 bool         use_pbo = true;
+unsigned	 frame_count = 0;
 
 std::string  texture_path;
 const char*  tutorial_ptx;
 int          tutorial_number = 0;
+
+// Geometry state
+Geometry sphere;
+
+// Camera setup
+enum CameraType
+{
+	Perspective = 0,
+	Orthographic = 1
+};
+const CameraType cameraType = CameraType::Perspective;
 
 // Camera state
 float3       camera_up;
@@ -160,8 +154,10 @@ void createContext()
 	{
 	case CameraType::Perspective :
 		camera_name = "perspective_camera";
+		break;
 	case CameraType::Orthographic :
 		camera_name = "orthographic_camera";
+		break;
 	}
 
 	// Ray generation program
@@ -192,7 +188,8 @@ void createContext()
 	// Random noise in range [0, 1]
 	for (int i = tex_width * tex_height * tex_depth; i > 0; i--) {
 		// One channel 3D noise in [0.0, 1.0] range.
-		*tex_data++ = rand_range(0.0f, 1.0f);
+		static unsigned int seed = 0u;
+		*tex_data++ = rnd(seed);
 	}
 	noiseBuffer->unmap();
 
@@ -250,7 +247,7 @@ void createGeometry()
 	sphere["sphere"]->setFloat(sphereData);
 
 	// Sphere material
-	std::string sphere_chname = "closest_hit_radiance0"; // Sphere closest hit program
+	std::string sphere_chname = "test_t_values"; // Sphere closest hit program
 	Material sphere_matl = context->createMaterial();
 	Program sphere_ch = context->createProgramFromPTXString(tutorial_ptx, sphere_chname.c_str());
 	sphere_matl->setClosestHitProgram(0, sphere_ch); // Closest hit shading
@@ -262,39 +259,6 @@ void createGeometry()
 	sphere_matl["phong_exp"]->setFloat(88);
 	sphere_matl["reflectivity_n"]->setFloat(0.2f, 0.2f, 0.2f);
 
-
-
-	// Create chull
-	Geometry chull = 0;
-	if (tutorial_number >= 9) {
-		chull = context->createGeometry();
-		chull->setPrimitiveCount(1u);
-		chull->setBoundingBoxProgram(context->createProgramFromPTXString(tutorial_ptx, "chull_bounds"));
-		chull->setIntersectionProgram(context->createProgramFromPTXString(tutorial_ptx, "chull_intersect"));
-		Buffer plane_buffer = context->createBuffer(RT_BUFFER_INPUT);
-		plane_buffer->setFormat(RT_FORMAT_FLOAT4);
-		int nsides = 6;
-		plane_buffer->setSize(nsides + 2);
-		float4* chplane = (float4*)plane_buffer->map();
-		float radius = 1;
-		float3 xlate = make_float3(-1.4f, 0, -3.7f);
-
-		for (int i = 0; i < nsides; i++) {
-			float angle = float(i) / float(nsides) * M_PIf * 2.0f;
-			float x = cos(angle);
-			float y = sin(angle);
-			chplane[i] = make_plane(make_float3(x, 0, y), make_float3(x*radius, 0, y*radius) + xlate);
-		}
-		float min = 0.02f;
-		float max = 3.5f;
-		chplane[nsides + 0] = make_plane(make_float3(0, -1, 0), make_float3(0, min, 0) + xlate);
-		float angle = 5.f / nsides * M_PIf * 2;
-		chplane[nsides + 1] = make_plane(make_float3(cos(angle), .7f, sin(angle)), make_float3(0, max, 0) + xlate);
-		plane_buffer->unmap();
-		chull["planes"]->setBuffer(plane_buffer);
-		chull["chull_bbmin"]->setFloat(-radius + xlate.x, min + xlate.y, -radius + xlate.z);
-		chull["chull_bbmax"]->setFloat(radius + xlate.x, max + xlate.y, radius + xlate.z);
-	}
 
 	// Floor geometry
 	Geometry parallelogram = context->createGeometry();
@@ -388,39 +352,12 @@ void createGeometry()
 	floor_matl["crack_color"]->setFloat(0.1f, 0.1f, 0.1f);
 	floor_matl["crack_width"]->setFloat(0.02f);
 
-	// Glass material
-	Material glass_matl;
-	if (chull.get()) {
-		Program glass_ch = context->createProgramFromPTXString(tutorial_ptx, "glass_closest_hit_radiance");
-		const std::string glass_ahname = tutorial_number >= 10 ? "glass_any_hit_shadow" : "any_hit_shadow";
-		Program glass_ah = context->createProgramFromPTXString(tutorial_ptx, glass_ahname.c_str());
-		glass_matl = context->createMaterial();
-		glass_matl->setClosestHitProgram(0, glass_ch);
-		glass_matl->setAnyHitProgram(1, glass_ah);
-
-		glass_matl["importance_cutoff"]->setFloat(1e-2f);
-		glass_matl["cutoff_color"]->setFloat(0.34f, 0.55f, 0.85f);
-		glass_matl["fresnel_exponent"]->setFloat(3.0f);
-		glass_matl["fresnel_minimum"]->setFloat(0.1f);
-		glass_matl["fresnel_maximum"]->setFloat(1.0f);
-		glass_matl["refraction_index"]->setFloat(1.4f);
-		glass_matl["refraction_color"]->setFloat(1.0f, 1.0f, 1.0f);
-		glass_matl["reflection_color"]->setFloat(1.0f, 1.0f, 1.0f);
-		glass_matl["refraction_maxdepth"]->setInt(100);
-		glass_matl["reflection_maxdepth"]->setInt(100);
-		float3 extinction = make_float3(.80f, .89f, .75f);
-		glass_matl["extinction_constant"]->setFloat(log(extinction.x), log(extinction.y), log(extinction.z));
-		glass_matl["shadow_attenuation"]->setFloat(0.4f, 0.7f, 0.4f);
-	}
-
 	// Create GIs for each piece of geometry
 	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
-	gis.push_back(context->createGeometryInstance(box, &box_matl, &box_matl + 1));
 	gis.push_back(context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1)); // + 1 designates how many materials we are using
+	gis.push_back(context->createGeometryInstance(box, &box_matl, &box_matl + 1));
 	gis.push_back(context->createGeometryInstance(parallelogram, &floor_matl, &floor_matl + 1));
-	if (chull.get())
-		gis.push_back(context->createGeometryInstance(chull, &glass_matl, &glass_matl + 1));
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
 	GeometryGroup geometrygroup = context->createGeometryGroup();
@@ -428,9 +365,6 @@ void createGeometry()
 	geometrygroup->setChild(0, gis[0]);
 	geometrygroup->setChild(1, gis[1]);
 	geometrygroup->setChild(2, gis[2]);
-	if (chull.get()) {
-		geometrygroup->setChild(3, gis[3]);
-	}
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(geometrygroup);
