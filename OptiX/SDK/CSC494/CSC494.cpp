@@ -25,6 +25,8 @@ using namespace optix;
 
 // Globals
 const char* const PROJECT_NAME = "CSC494";
+unsigned frame_count = 0;
+Geometry sphere;
 
 enum CameraType
 {
@@ -235,7 +237,7 @@ void createGeometry()
 
 
 	// Create a sphere
-	Geometry sphere = context->createGeometry(); // Create a new empty graph node
+	sphere = context->createGeometry(); // Create a new empty graph node
 	sphere->setPrimitiveCount(1u);				 // Number of possible primitive intersections in the node
 	float4 sphereData = make_float4(0.0f, 0.0f, 0.0f, 5.0f); // .xyz = Position, .w = radius
 
@@ -464,6 +466,18 @@ void setupLights()
 	context["lights"]->set(light_buffer);
 }
 
+void updateGeometry()
+{
+	if (sphere)
+	{
+		// Bounce sphere around
+		double yMovement = sin(frame_count / 60.0f) * 3.0f;
+		double xMovement = sin(frame_count / 70.0f) * 4.0f;
+		double zMovement = sin(frame_count / 80.0f) * 2.0f;
+		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
+		sphere["sphere"]->setFloat(sphereData);
+	}
+}
 
 void updateCamera()
 {
@@ -552,6 +566,7 @@ void glutRun()
 
 void glutDisplay()
 {
+	updateGeometry();
 	updateCamera();
 
 	context->launch(0, width, height);
@@ -559,7 +574,6 @@ void glutDisplay()
 	Buffer buffer = getOutputBuffer();
 	sutil::displayBufferGL(getOutputBuffer());
 
-	static unsigned frame_count = 0;
 	sutil::displayFps(frame_count++);
 
 	glutSwapBuffers();
