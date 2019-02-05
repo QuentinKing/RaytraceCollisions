@@ -232,6 +232,36 @@ void createGeometry()
 	box["boxmin"]->setFloat(-2.0f, 0.0f, -2.0f);
 	box["boxmax"]->setFloat(2.0f, 7.0f, 2.0f);
 
+
+
+	// Create a sphere
+	Geometry sphere = context->createGeometry(); // Create a new empty graph node
+	sphere->setPrimitiveCount(1u);				 // Number of possible primitive intersections in the node
+	float4 sphereData = make_float4(0.0f, 0.0f, 0.0f, 5.0f); // .xyz = Position, .w = radius
+
+	// Link sphere programs and variables
+	ptx = sutil::getPtxString(PROJECT_NAME, "sphere_model.cu");
+	Program sphere_bounds = context->createProgramFromPTXString(ptx, "bounds");
+	Program sphere_intersect = context->createProgramFromPTXString(ptx, "robust_intersect");
+	sphere->setBoundingBoxProgram(sphere_bounds);
+	sphere->setIntersectionProgram(sphere_intersect);
+	sphere["sphere"]->setFloat(sphereData);
+
+	// Sphere material
+	std::string sphere_chname = "closest_hit_radiance0"; // Sphere closest hit program
+	Material sphere_matl = context->createMaterial();
+	Program sphere_ch = context->createProgramFromPTXString(tutorial_ptx, sphere_chname.c_str());
+	sphere_matl->setClosestHitProgram(0, sphere_ch); // Closest hit shading
+
+	// Sphere material properties
+	sphere_matl["Ka"]->setFloat(0.3f, 0.3f, 0.3f);
+	sphere_matl["Kd"]->setFloat(0.6f, 0.7f, 0.8f);
+	sphere_matl["Ks"]->setFloat(0.8f, 0.9f, 0.8f);
+	sphere_matl["phong_exp"]->setFloat(88);
+	sphere_matl["reflectivity_n"]->setFloat(0.2f, 0.2f, 0.2f);
+
+
+
 	// Create chull
 	Geometry chull = 0;
 	if (tutorial_number >= 9) {
@@ -382,19 +412,22 @@ void createGeometry()
 	}
 
 	// Create GIs for each piece of geometry
+	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
 	gis.push_back(context->createGeometryInstance(box, &box_matl, &box_matl + 1));
+	gis.push_back(context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1)); // + 1 designates how many materials we are using
 	gis.push_back(context->createGeometryInstance(parallelogram, &floor_matl, &floor_matl + 1));
 	if (chull.get())
 		gis.push_back(context->createGeometryInstance(chull, &glass_matl, &glass_matl + 1));
 
-	// Place all in group
+	// Geometry group -> coupling some number of instances with an acceleration structure
 	GeometryGroup geometrygroup = context->createGeometryGroup();
 	geometrygroup->setChildCount(static_cast<unsigned int>(gis.size()));
 	geometrygroup->setChild(0, gis[0]);
 	geometrygroup->setChild(1, gis[1]);
+	geometrygroup->setChild(2, gis[2]);
 	if (chull.get()) {
-		geometrygroup->setChild(2, gis[2]);
+		geometrygroup->setChild(3, gis[3]);
 	}
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
@@ -526,10 +559,8 @@ void glutDisplay()
 	Buffer buffer = getOutputBuffer();
 	sutil::displayBufferGL(getOutputBuffer());
 
-	{
-		static unsigned frame_count = 0;
-		sutil::displayFps(frame_count++);
-	}
+	static unsigned frame_count = 0;
+	sutil::displayFps(frame_count++);
 
 	glutSwapBuffers();
 }
