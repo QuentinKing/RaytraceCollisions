@@ -48,15 +48,37 @@ rtDeclareVariable(float3, U, , );
 rtDeclareVariable(float3, V, , );
 rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float3, bad_color, , );
+rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
 
-RT_PROGRAM void pinhole_camera()
+// Perspective camera
+RT_PROGRAM void perspective_camera()
 {
 	size_t2 screen = output_buffer.size();
 
 	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
 	float3 ray_origin = eye;
 	float3 ray_direction = normalize(d.x*U + d.y*V + W);
+
+	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
+
+	PerRayData_radiance prd;
+	prd.importance = 1.f;
+	prd.depth = 0;
+
+	rtTrace(top_object, ray, prd);
+
+	output_buffer[launch_index] = make_color(prd.result);
+}
+
+// Orthographic camera (easier calculations for intersection volumes)
+RT_PROGRAM void orthographic_camera()
+{
+	size_t2 screen = output_buffer.size();
+
+	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
+	float3 ray_origin = eye + d.x*U*orthoCameraSize.x + d.y*V*orthoCameraSize.y;
+	float3 ray_direction = normalize(W);
 
 	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
 

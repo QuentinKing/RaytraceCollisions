@@ -1,72 +1,13 @@
-/*
- * Copyright (c) 2018 NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+// OpenGL
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#include <GL/freeglut.h>
 
- //-----------------------------------------------------------------------------
- //
- //  tutorial
- //
- //-----------------------------------------------------------------------------
-
- // 0 - normal shader
- // 1 - lambertian
- // 2 - specular
- // 3 - shadows
- // 4 - reflections
- // 5 - miss
- // 6 - schlick
- // 7 - procedural texture on floor
- // 8 - LGRustyMetal
- // 9 - intersection
- // 10 - anyhit
- // 11 - camera
-
-
-
-#ifdef __APPLE__
-#  include <GLUT/glut.h>
-#else
-#  include <GL/glew.h>
-#  if defined( _WIN32 )
-#  include <GL/wglew.h>
-#  include <GL/freeglut.h>
-#  else
-#  include <GL/glut.h>
-#  endif
-#endif
-
+// OptiX
 #include <optixu/optixpp_namespace.h>
 #include <optixu/optixu_math_stream_namespace.h>
 
-#include <sutil.h>
-#include "commonStructs.h"
-#include "random.h"
-#include <Arcball.h>
-
+// STL
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -74,9 +15,24 @@
 #include <math.h>
 #include <stdint.h>
 
+// User created headers / includes
+#include <sutil.h>
+#include "commonStructs.h"
+#include "random.h"
+#include <Arcball.h>
+
 using namespace optix;
 
-const char* const SAMPLE_NAME = "optixTutorial";
+// Globals
+const char* const PROJECT_NAME = "CSC494";
+
+enum CameraType
+{
+	Perspective = 0,
+	Orthographic = 1
+};
+const CameraType cameraType = CameraType::Orthographic;
+
 
 static float rand_range(float min, float max)
 {
@@ -196,9 +152,17 @@ void createContext()
 	Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
 	context["output_buffer"]->set(buffer);
 
+	// Determine what type of camera we are using
+	std::string camera_name;
+	switch (cameraType)
+	{
+	case CameraType::Perspective :
+		camera_name = "perspective_camera";
+	case CameraType::Orthographic :
+		camera_name = "orthographic_camera";
+	}
 
 	// Ray generation program
-	const std::string camera_name = tutorial_number >= 11 ? "env_camera" : "pinhole_camera";
 	Program ray_gen_program = context->createProgramFromPTXString(tutorial_ptx, camera_name);
 	context->setRayGenerationProgram(0, ray_gen_program);
 
@@ -256,7 +220,7 @@ float4 make_plane(float3 n, float3 p)
 
 void createGeometry()
 {
-	const char *ptx = sutil::getPtxString(SAMPLE_NAME, "box.cu");
+	const char *ptx = sutil::getPtxString(PROJECT_NAME, "box.cu");
 	Program box_bounds = context->createProgramFromPTXString(ptx, "box_bounds");
 	Program box_intersect = context->createProgramFromPTXString(ptx, "box_intersect");
 
@@ -303,7 +267,7 @@ void createGeometry()
 	// Floor geometry
 	Geometry parallelogram = context->createGeometry();
 	parallelogram->setPrimitiveCount(1u);
-	ptx = sutil::getPtxString(SAMPLE_NAME, "parallelogram.cu");
+	ptx = sutil::getPtxString(PROJECT_NAME, "parallelogram.cu");
 	parallelogram->setBoundingBoxProgram(context->createProgramFromPTXString(ptx, "bounds"));
 	parallelogram->setIntersectionProgram(context->createProgramFromPTXString(ptx, "intersect"));
 	float3 anchor = make_float3(-64.0f, 0.01f, -64.0f);
@@ -502,6 +466,8 @@ void updateCamera()
 	context["U"]->setFloat(camera_u);
 	context["V"]->setFloat(camera_v);
 	context["W"]->setFloat(camera_w);
+
+	context["orthoCameraSize"]->setFloat(make_float2(1.0f, 1.0f));
 }
 
 
@@ -511,7 +477,7 @@ void glutInitialize(int* argc, char** argv)
 	glutInitDisplayMode(GLUT_RGB | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(width, height);
 	glutInitWindowPosition(100, 100);
-	glutCreateWindow(SAMPLE_NAME);
+	glutCreateWindow(PROJECT_NAME);
 	glutHideWindow();
 }
 
@@ -582,7 +548,7 @@ void glutKeyboardPress(unsigned char k, int x, int y)
 	}
 	case('s'):
 	{
-		const std::string outputImage = std::string(SAMPLE_NAME) + ".ppm";
+		const std::string outputImage = std::string(PROJECT_NAME) + ".ppm";
 		std::cerr << "Saving current frame to '" << outputImage << "'\n";
 		sutil::displayBufferPPM(outputImage.c_str(), getOutputBuffer());
 		break;
@@ -668,7 +634,7 @@ void printUsageAndExit(const std::string& argv0)
 		"  -t | --texture-path <path>                Specify path to texture directory\n"
 		"App Keystrokes:\n"
 		"  q  Quit\n"
-		"  s  Save image to '" << SAMPLE_NAME << ".ppm'\n"
+		"  s  Save image to '" << PROJECT_NAME << ".ppm'\n"
 		<< std::endl;
 
 	exit(1);
@@ -740,7 +706,7 @@ int main(int argc, char** argv)
 		std::stringstream ss;
 		ss << "tutorial" << tutorial_number << ".cu";
 		std::string tutorial_ptx_path = ss.str();
-		tutorial_ptx = sutil::getPtxString(SAMPLE_NAME, tutorial_ptx_path.c_str());
+		tutorial_ptx = sutil::getPtxString(PROJECT_NAME, tutorial_ptx_path.c_str());
 
 		createContext();
 		createGeometry();
