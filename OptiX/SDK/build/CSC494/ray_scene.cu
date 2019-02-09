@@ -63,6 +63,7 @@ RT_PROGRAM void pinhole_camera()
 	PerRayData_radiance prd;
 	prd.importance = 1.f;
 	prd.depth = 0;
+	prd.numIntersections = 0;
 
 	rtTrace(top_object, ray, prd);
 

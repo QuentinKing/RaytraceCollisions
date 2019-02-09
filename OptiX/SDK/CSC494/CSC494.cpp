@@ -50,7 +50,7 @@ enum CameraType
 	Perspective = 0,
 	Orthographic = 1
 };
-const CameraType cameraType = CameraType::Perspective;
+const CameraType cameraType = CameraType::Orthographic;
 
 // Camera state
 float3       camera_up;
@@ -247,9 +247,11 @@ void createGeometry()
 	sphere["sphere"]->setFloat(sphereData);
 
 	// Sphere material
-	std::string sphere_chname = "test_t_values"; // Sphere closest hit program
+	std::string sphere_chname = "closest_hit_radiance0"; // Sphere closest hit program
 	Material sphere_matl = context->createMaterial();
 	Program sphere_ch = context->createProgramFromPTXString(tutorial_ptx, sphere_chname.c_str());
+	Program sphere_ah = context->createProgramFromPTXString(tutorial_ptx, "any_hit");
+	sphere_matl->setAnyHitProgram(0, sphere_ah);
 	sphere_matl->setClosestHitProgram(0, sphere_ch); // Closest hit shading
 
 	// Sphere material properties

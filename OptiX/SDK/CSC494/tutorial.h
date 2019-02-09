@@ -7,6 +7,8 @@ using namespace optix;
 
 #define FLT_MAX         1e30;
 
+const int INTERSECTION_SAMPLES = 256;
+
 static __device__ __inline__ float3 exp(const float3& x)
 {
 	return make_float3(exp(x.x), exp(x.y), exp(x.z));
@@ -43,6 +45,9 @@ struct PerRayData_radiance
 	float3 result;
 	float  importance;
 	int depth;
+
+	int numIntersections;
+	float2 intersections[INTERSECTION_SAMPLES]; // We'll store t-values of all intersections in this buffer
 };
 
 struct PerRayData_shadow

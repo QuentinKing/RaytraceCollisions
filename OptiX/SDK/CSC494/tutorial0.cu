@@ -52,6 +52,8 @@ rtDeclareVariable(float3, bad_color, , );
 rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
 
+// Volumetric buffers
+
 // Perspective camera
 RT_PROGRAM void perspective_camera()
 {
@@ -66,10 +68,17 @@ RT_PROGRAM void perspective_camera()
 	PerRayData_radiance prd;
 	prd.importance = 1.f;
 	prd.depth = 0;
+	prd.numIntersections = 0;
 
 	rtTrace(top_object, ray, prd);
 
-	output_buffer[launch_index] = make_color(prd.result);
+	int total = 0;
+	for (int i = 0; i < prd.numIntersections; i++)
+	{
+		total++;
+	}
+
+	output_buffer[launch_index] = total > 0 ? make_uchar4(0, 0, 0, 0) : make_color(prd.result);
 }
 
 // Orthographic camera (easier calculations for intersection volumes)
@@ -86,10 +95,17 @@ RT_PROGRAM void orthographic_camera()
 	PerRayData_radiance prd;
 	prd.importance = 1.f;
 	prd.depth = 0;
+	prd.numIntersections = 0;
 
 	rtTrace(top_object, ray, prd);
 
-	output_buffer[launch_index] = make_color(prd.result);
+	int total = 0;
+	for (int i = 0; i < prd.numIntersections; i++)
+	{
+		total++;
+	}
+
+	output_buffer[launch_index] = total > 0 ? make_uchar4(0,0,0,0) : make_color(prd.result);
 }
 
 //
@@ -110,12 +126,17 @@ RT_PROGRAM void closest_hit_radiance0()
 	prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
 }
 
-//
-// Returns shading normal as the surface shading result
-// 
-RT_PROGRAM void test_t_values()
+// Any hit program
+RT_PROGRAM void any_hit()
 {
-	prd_radiance.result = normalize(make_float3(t_values.x, 0.0f, t_values.y));
+	// Record our intersection values
+	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
+	{
+		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
+		prd_radiance.numIntersections++;
+	}
+
+	rtIgnoreIntersection();
 }
 
 //
