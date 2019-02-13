@@ -28,9 +28,6 @@
 
 #include "tutorial.h"
 
-rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float2, t_values, attribute t_values, );
-
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
@@ -52,9 +49,30 @@ rtDeclareVariable(float3, bad_color, , );
 rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
 
-// Volumetric buffers
+// Volumetric variables
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float2, t_values, attribute t_values, );
 
-// Perspective camera
+// Checks given a list of entry and exit points if any of them overlap
+// indicating that an intersection has occured for the current ray
+bool CheckIntersectionOverlap(PerRayData_radiance prd)
+{
+	for (int i = 0; i < prd.numIntersections; i++)
+	{
+		float2 firstInterval = prd.intersections[i];
+		for (int j = i + 1; j < prd.numIntersections; j++)
+		{
+			float2 secondInterval = prd.intersections[j];
+			if (firstInterval.x <= secondInterval.y && secondInterval.x <= firstInterval.y)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// Perspective camera (Not in use currently)
 RT_PROGRAM void perspective_camera()
 {
 	size_t2 screen = output_buffer.size();
@@ -72,13 +90,7 @@ RT_PROGRAM void perspective_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	int total = 0;
-	for (int i = 0; i < prd.numIntersections; i++)
-	{
-		total++;
-	}
-
-	output_buffer[launch_index] = total > 0 ? make_uchar4(0, 0, 0, 0) : make_color(prd.result);
+	output_buffer[launch_index] = make_color(prd.result);
 }
 
 // Orthographic camera (easier calculations for intersection volumes)
@@ -99,15 +111,14 @@ RT_PROGRAM void orthographic_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	int total = 0;
-	for (int i = 0; i < prd.numIntersections; i++)
+	if (prd.numIntersections > 0)
 	{
-		total++;
+		output_buffer[launch_index] = CheckIntersectionOverlap(prd) ? make_color(make_float3(0, 0, 0)) : make_color(make_float3(1, 1, 1));
 	}
-
-	float val = total / 4.0f;
-
-	output_buffer[launch_index] = total > 0 ? make_color(make_float3(val, val, val)) : make_color(prd.result);
+	else
+	{
+		output_buffer[launch_index] = make_color(prd.result);
+	}
 }
 
 //

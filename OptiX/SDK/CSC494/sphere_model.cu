@@ -87,16 +87,6 @@ void intersect_sphere(void)
 			if (rtReportIntersection(0))
 				check_second = false;
 		}
-
-		if (check_second) 
-		{
-			if (rtPotentialIntersection(t2)) 
-			{
-				t_values = a;
-				shading_normal = geometric_normal = (O + t2 * D) / radius;
-				rtReportIntersection(0);
-			}
-		}
 	}
 }
 
