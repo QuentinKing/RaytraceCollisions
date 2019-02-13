@@ -31,6 +31,7 @@ using namespace optix;
 //------------------------------------------------------------------------------
 
 const char* const PROJECT_NAME = "CSC494";
+const char* const SCENE_NAME = "ray_scene.cu";
 
 Context      context;
 uint32_t     width = 1080u;
@@ -43,6 +44,7 @@ const char*  scene_ptx;
 
 // Geometry state
 GeometryInstance movingSphere;
+GeometryInstance movingSphere2;
 
 // Camera setup
 enum CameraType
@@ -73,11 +75,11 @@ int        mouse_button;
 Buffer getOutputBuffer();
 void destroyContext();
 void registerExitHandler();
-void createContext();
+void CreateContext();
 void CreateScene();
-void setupCamera();
-void setupLights();
-void updateCamera();
+void SetupCamera();
+void SetupLights();
+void UpdateCamera();
 void glutInitialize(int* argc, char** argv);
 void glutRun();
 
@@ -121,7 +123,7 @@ void registerExitHandler()
 }
 
 
-void createContext()
+void CreateContext()
 {
 	// Set up context
 	context = Context::create();
@@ -213,21 +215,24 @@ void createContext()
 
 void CreateScene()
 {
-	GeometryCreator geometryCreator(context, PROJECT_NAME, "ray_scene.cu");
+	GeometryCreator geometryCreator(context, PROJECT_NAME, SCENE_NAME);
 
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0,0,0), 3.0f);
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-2.0f, 0.0f, -2.0f), make_float3(2.0f, 7.0f, 2.0f));
+	GeometryInstance sphereInstance2 = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
+	//GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-2.0f, 0.0f, -2.0f), make_float3(2.0f, 7.0f, 2.0f));
 	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.01f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
 		make_float3(0.0f, 0.0f, 128.0f));
 
 	movingSphere = sphereInstance;
+	movingSphere2 = sphereInstance2;
 
 	// Create GIs for each piece of geometry
 	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
 	gis.push_back(sphereInstance);
-	gis.push_back(boxInstance);
+	gis.push_back(sphereInstance2);
+	//gis.push_back(boxInstance);
 	gis.push_back(planeInstance);
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
@@ -243,7 +248,7 @@ void CreateScene()
 }
 
 
-void setupCamera()
+void SetupCamera()
 {
 	camera_eye = make_float3(7.0f, 9.2f, -6.0f);
 	camera_lookat = make_float3(0.0f, 4.0f, 0.0f);
@@ -253,7 +258,7 @@ void setupCamera()
 }
 
 
-void setupLights()
+void SetupLights()
 {
 
 	BasicLight lights[] = {
@@ -270,7 +275,7 @@ void setupLights()
 	context["lights"]->set(light_buffer);
 }
 
-void updateGeometry()
+void UpdateGeometry()
 {
 	if (movingSphere)
 	{
@@ -281,9 +286,19 @@ void updateGeometry()
 		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
 		movingSphere["sphere"]->setFloat(sphereData);
 	}
+
+	if (movingSphere2)
+	{
+		// Bounce sphere around
+		double yMovement = -sin(frame_count / 60.0f) * 3.0f;
+		double xMovement = -sin(frame_count / 70.0f) * 4.0f;
+		double zMovement = -sin(frame_count / 80.0f) * 2.0f;
+		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
+		movingSphere2["sphere"]->setFloat(sphereData);
+	}
 }
 
-void updateCamera()
+void UpdateCamera()
 {
 	const float vfov = 60.0f;
 	const float aspect_ratio = static_cast<float>(width) /
@@ -348,7 +363,7 @@ void glutRun()
 	glutShowWindow();
 	glutReshapeWindow(width, height);
 
-	// register glut callbacks
+	// GLUT callbacks
 	glutDisplayFunc(glutDisplay);
 	glutIdleFunc(glutDisplay);
 	glutReshapeFunc(glutResize);
@@ -370,8 +385,8 @@ void glutRun()
 
 void glutDisplay()
 {
-	updateGeometry();
-	updateCamera();
+	UpdateGeometry();
+	UpdateCamera();
 
 	context->launch(0, width, height);
 
@@ -389,19 +404,19 @@ void glutKeyboardPress(unsigned char k, int x, int y)
 
 	switch (k)
 	{
-	case('q'):
-	case(27): // ESC
-	{
-		destroyContext();
-		exit(0);
-	}
-	case('s'):
-	{
-		const std::string outputImage = std::string(PROJECT_NAME) + ".ppm";
-		std::cerr << "Saving current frame to '" << outputImage << "'\n";
-		sutil::displayBufferPPM(outputImage.c_str(), getOutputBuffer());
-		break;
-	}
+		case('q'):
+		case(27): // ESC
+		{
+			destroyContext();
+			exit(0);
+		}
+		case('s'):
+		{
+			const std::string outputImage = std::string(PROJECT_NAME) + ".ppm";
+			std::cerr << "Saving current frame to '" << outputImage << "'\n";
+			sutil::displayBufferPPM(outputImage.c_str(), getOutputBuffer());
+			break;
+		}
 	}
 }
 
@@ -515,7 +530,8 @@ int main(int argc, char** argv)
 		}
 		else if (arg == "-t" || arg == "--texture-path")
 		{
-			if (i == argc - 1) {
+			if (i == argc - 1)
+			{
 				std::cerr << "Option '" << arg << "' requires additional argument.\n";
 				printUsageAndExit(argv[0]);
 			}
@@ -528,7 +544,8 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if (texture_path.empty()) {
+	if (texture_path.empty())
+	{
 		texture_path = std::string(sutil::samplesDir()) + "/data";
 	}
 
@@ -541,13 +558,12 @@ int main(int argc, char** argv)
 #endif
 
 		// Load PTX source
-		std::string scene_name = "ray_scene.cu";
-		scene_ptx = sutil::getPtxString(PROJECT_NAME, scene_name.c_str());
+		scene_ptx = sutil::getPtxString(PROJECT_NAME, SCENE_NAME);
 
-		createContext();
+		CreateContext();
 		CreateScene();
-		setupCamera();
-		setupLights();
+		SetupCamera();
+		SetupLights();
 
 		context->validate();
 
@@ -557,7 +573,7 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			updateCamera();
+			UpdateCamera();
 			context->launch(0, width, height);
 			sutil::displayBufferPPM(out_file.c_str(), getOutputBuffer());
 			destroyContext();

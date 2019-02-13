@@ -25,7 +25,7 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 
 	// Create material
 	Material sphere_matl = context->createMaterial();
-	Program sphere_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance0");
+	Program sphere_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance1");
 	Program sphere_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
 	sphere_matl->setClosestHitProgram(0, sphere_ch);
 	sphere_matl->setAnyHitProgram(0, sphere_ah);

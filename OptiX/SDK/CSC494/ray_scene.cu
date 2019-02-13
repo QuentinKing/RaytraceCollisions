@@ -105,7 +105,9 @@ RT_PROGRAM void orthographic_camera()
 		total++;
 	}
 
-	output_buffer[launch_index] = total > 0 ? make_uchar4(0, 0, 0, 0) : make_color(prd.result);
+	float val = total / 4.0f;
+
+	output_buffer[launch_index] = total > 0 ? make_color(make_float3(val, val, val)) : make_color(prd.result);
 }
 
 //
@@ -124,6 +126,14 @@ RT_PROGRAM void miss()
 RT_PROGRAM void closest_hit_radiance0()
 {
 	prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
+}
+
+//
+// Returns shading normal as the surface shading result
+// 
+RT_PROGRAM void closest_hit_radiance1()
+{
+	prd_radiance.result = make_float3(1.0f, 1.0f, 1.0f);
 }
 
 // Any hit program

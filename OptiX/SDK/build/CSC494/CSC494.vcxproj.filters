@@ -32,10 +32,10 @@
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu">
       <Filter>CUDA Files</Filter>
     </None>
-    <None Include="ray_scene.cu">
+    <None Include="..\..\CSC494\parallelogram.cu">
       <Filter>CUDA Files</Filter>
     </None>
-    <None Include="..\..\CSC494\parallelogram.cu">
+    <None Include="..\..\CSC494\ray_scene.cu">
       <Filter>CUDA Files</Filter>
     </None>
   </ItemGroup>

@@ -330,7 +330,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h" />
     <None Include="..\..\CSC494\parallelogram.cu" />
-    <None Include="ray_scene.cu" />
+    <None Include="..\..\CSC494\ray_scene.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\sphere_model.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu" />
   </ItemGroup>
