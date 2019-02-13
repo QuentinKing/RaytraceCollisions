@@ -54,6 +54,14 @@ enum CameraType
 };
 const CameraType cameraType = CameraType::Orthographic;
 
+// Buffer to render
+enum RenderBuffer
+{
+	ShadedOutput = 0,
+	IntersectionVolume = 1
+};
+RenderBuffer curRenderBuffer = RenderBuffer::ShadedOutput;
+
 // Camera state
 float3       camera_up;
 float3       camera_lookat;
@@ -101,6 +109,10 @@ Buffer getOutputBuffer()
 	return context["output_buffer"]->getBuffer();
 }
 
+Buffer GetVolumeBuffer()
+{
+	return context["volume_buffer"]->getBuffer();
+}
 
 void destroyContext()
 {
@@ -133,11 +145,7 @@ void CreateContext()
 
 	// Note: high max depth for reflection and refraction through glass
 	context["max_depth"]->setInt(100);
-	context["radiance_ray_type"]->setUint(0);
-	context["shadow_ray_type"]->setUint(1);
 	context["scene_epsilon"]->setFloat(1.e-4f);
-	context["importance_cutoff"]->setFloat(0.01f);
-	context["ambient_light_color"]->setFloat(0.31f, 0.33f, 0.28f);
 
 	// Output buffer
 	// First allocate the memory for the GL buffer, then attach it to OptiX.
@@ -149,6 +157,9 @@ void CreateContext()
 
 	Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
 	context["output_buffer"]->set(buffer);
+
+	Buffer volume_buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
+	context["volume_buffer"]->set(volume_buffer);
 
 	// Determine what type of camera we are using
 	std::string camera_name;
@@ -390,8 +401,23 @@ void glutDisplay()
 
 	context->launch(0, width, height);
 
-	Buffer buffer = getOutputBuffer();
-	sutil::displayBufferGL(getOutputBuffer());
+	Buffer renderBuffer;
+	switch (curRenderBuffer)
+	{
+	case RenderBuffer::ShadedOutput:
+		renderBuffer = getOutputBuffer();
+		sutil::displayBufferGL(renderBuffer);
+		break;
+	case RenderBuffer::IntersectionVolume:
+		renderBuffer = GetVolumeBuffer();
+		sutil::displayBufferGL(renderBuffer);
+		break;
+	}
+
+	float volume = 0.0f;
+	char volumeText[64];
+	snprintf(volumeText, sizeof volumeText, "%f", volume);
+	sutil::displayText(volumeText, 25, height-25);
 
 	sutil::displayFps(frame_count++);
 
@@ -415,6 +441,16 @@ void glutKeyboardPress(unsigned char k, int x, int y)
 			const std::string outputImage = std::string(PROJECT_NAME) + ".ppm";
 			std::cerr << "Saving current frame to '" << outputImage << "'\n";
 			sutil::displayBufferPPM(outputImage.c_str(), getOutputBuffer());
+			break;
+		}
+		case('v'):
+		{
+			curRenderBuffer = RenderBuffer::ShadedOutput;
+			break;
+		}
+		case('b'):
+		{
+			curRenderBuffer = RenderBuffer::IntersectionVolume;
 			break;
 		}
 	}

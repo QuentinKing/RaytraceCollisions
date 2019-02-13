@@ -48,6 +48,7 @@ rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float3, bad_color, , );
 rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
+rtBuffer<uchar4, 2>              volume_buffer;
 
 // Volumetric variables
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -57,6 +58,8 @@ rtDeclareVariable(float2, t_values, attribute t_values, );
 // indicating that an intersection has occured for the current ray
 bool CheckIntersectionOverlap(PerRayData_radiance prd)
 {
+	float2 screen = make_float2(output_buffer.size());
+	float2 pixelSize = orthoCameraSize / screen;
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
 		float2 firstInterval = prd.intersections[i];
@@ -65,10 +68,15 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 			float2 secondInterval = prd.intersections[j];
 			if (firstInterval.x <= secondInterval.y && secondInterval.x <= firstInterval.y)
 			{
+				// Compute intersection volume and save it to our buffer
+				float volume = (firstInterval.y - secondInterval.x) * pixelSize.x * pixelSize.y;
+				float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
+				volume_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
 				return true;
 			}
 		}
 	}
+	volume_buffer[launch_index] = prd.numIntersections > 0 ? make_color(make_float3(0.1, 0.1, 0.1)) : make_color(make_float3(0, 0, 0));
 	return false;
 }
 
@@ -111,6 +119,7 @@ RT_PROGRAM void orthographic_camera()
 
 	rtTrace(top_object, ray, prd);
 
+	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	if (prd.numIntersections > 0)
 	{
 		output_buffer[launch_index] = CheckIntersectionOverlap(prd) ? make_color(make_float3(0, 0, 0)) : make_color(make_float3(1, 1, 1));
