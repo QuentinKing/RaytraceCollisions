@@ -29,6 +29,7 @@
 #include "tutorial.h"
 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float2, t_values, attribute t_values, );
 
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
@@ -48,9 +49,13 @@ rtDeclareVariable(float3, U, , );
 rtDeclareVariable(float3, V, , );
 rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float3, bad_color, , );
+rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
 
-RT_PROGRAM void pinhole_camera()
+// Volumetric buffers
+
+// Perspective camera
+RT_PROGRAM void perspective_camera()
 {
 	size_t2 screen = output_buffer.size();
 
@@ -67,7 +72,40 @@ RT_PROGRAM void pinhole_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	output_buffer[launch_index] = make_color(prd.result);
+	int total = 0;
+	for (int i = 0; i < prd.numIntersections; i++)
+	{
+		total++;
+	}
+
+	output_buffer[launch_index] = total > 0 ? make_uchar4(0, 0, 0, 0) : make_color(prd.result);
+}
+
+// Orthographic camera (easier calculations for intersection volumes)
+RT_PROGRAM void orthographic_camera()
+{
+	size_t2 screen = output_buffer.size();
+
+	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
+	float3 ray_origin = eye + d.x*U*orthoCameraSize.x + d.y*V*orthoCameraSize.y;
+	float3 ray_direction = normalize(W);
+
+	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
+
+	PerRayData_radiance prd;
+	prd.importance = 1.f;
+	prd.depth = 0;
+	prd.numIntersections = 0;
+
+	rtTrace(top_object, ray, prd);
+
+	int total = 0;
+	for (int i = 0; i < prd.numIntersections; i++)
+	{
+		total++;
+	}
+
+	output_buffer[launch_index] = total > 0 ? make_uchar4(0, 0, 0, 0) : make_color(prd.result);
 }
 
 //
@@ -88,6 +126,18 @@ RT_PROGRAM void closest_hit_radiance0()
 	prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
 }
 
+// Any hit program
+RT_PROGRAM void any_hit()
+{
+	// Record our intersection values
+	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
+	{
+		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
+		prd_radiance.numIntersections++;
+	}
+
+	rtIgnoreIntersection();
+}
 
 //
 // Set pixel to solid color upon failur

@@ -323,15 +323,16 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\CSC494\GeometryCreator.cpp" />
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\CSC494.cpp" />
+    <ClInclude Include="..\..\CSC494\GeomteryCreator.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\commonStructs.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h" />
-    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\build\CSC494\ray_scene.cu" />
+    <None Include="..\..\CSC494\parallelogram.cu" />
+    <None Include="ray_scene.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\sphere_model.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu" />
-    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\parallelogram.cu" />
-    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial0.cu" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\build\ZERO_CHECK.vcxproj">

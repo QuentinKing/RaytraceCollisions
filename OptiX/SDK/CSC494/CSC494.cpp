@@ -20,6 +20,7 @@
 #include "commonStructs.h"
 #include "random.h"
 #include <Arcball.h>
+#include "GeomteryCreator.h"
 
 using namespace optix;
 
@@ -38,11 +39,10 @@ bool         use_pbo = true;
 unsigned	 frame_count = 0;
 
 std::string  texture_path;
-const char*  tutorial_ptx;
-int          tutorial_number = 0;
+const char*  scene_ptx;
 
 // Geometry state
-Geometry sphere;
+GeometryInstance movingSphere;
 
 // Camera setup
 enum CameraType
@@ -66,7 +66,7 @@ int        mouse_button;
 
 //------------------------------------------------------------------------------
 //
-// Forward decls
+// Forward declarations
 //
 //------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ Buffer getOutputBuffer();
 void destroyContext();
 void registerExitHandler();
 void createContext();
-void createGeometry();
+void CreateScene();
 void setupCamera();
 void setupLights();
 void updateCamera();
@@ -125,9 +125,9 @@ void createContext()
 {
 	// Set up context
 	context = Context::create();
-	context->setRayTypeCount(2);
-	context->setEntryPointCount(1);
-	context->setStackSize(4640);
+	context->setRayTypeCount(2);	// The number of types of rays (shading, shadowing)
+	context->setEntryPointCount(1); // Entry points, one for each ray generation algorithm (used for multipass rendering)
+	context->setStackSize(4640);	// Allocated stack for each thread of execution
 
 	// Note: high max depth for reflection and refraction through glass
 	context["max_depth"]->setInt(100);
@@ -161,17 +161,17 @@ void createContext()
 	}
 
 	// Ray generation program
-	Program ray_gen_program = context->createProgramFromPTXString(tutorial_ptx, camera_name);
+	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx, camera_name);
 	context->setRayGenerationProgram(0, ray_gen_program);
 
 	// Exception program
-	Program exception_program = context->createProgramFromPTXString(tutorial_ptx, "exception");
+	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
 	context->setExceptionProgram(0, exception_program);
 	context["bad_color"]->setFloat(1.0f, 0.0f, 1.0f);
 
 	// Miss program
-	const std::string miss_name = tutorial_number >= 5 ? "envmap_miss" : "miss";
-	context->setMissProgram(0, context->createProgramFromPTXString(tutorial_ptx, miss_name));
+	const std::string miss_name = "miss";
+	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, miss_name));
 	const float3 default_color = make_float3(1.0f, 1.0f, 1.0f);
 	const std::string texpath = texture_path + "/" + std::string("CedarCity.hdr");
 	context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, default_color));
@@ -210,168 +210,36 @@ void createContext()
 	context["noise_texture"]->setTextureSampler(noiseSampler);
 }
 
-float4 make_plane(float3 n, float3 p)
+
+void CreateScene()
 {
-	n = normalize(n);
-	float d = -dot(n, p);
-	return make_float4(n, d);
-}
+	GeometryCreator geometryCreator(context, PROJECT_NAME, "ray_scene.cu");
 
-void createGeometry()
-{
-	const char *ptx = sutil::getPtxString(PROJECT_NAME, "box.cu");
-	Program box_bounds = context->createProgramFromPTXString(ptx, "box_bounds");
-	Program box_intersect = context->createProgramFromPTXString(ptx, "box_intersect");
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0,0,0), 3.0f);
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-2.0f, 0.0f, -2.0f), make_float3(2.0f, 7.0f, 2.0f));
+	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.01f, -64.0f),
+		make_float3(128.0f, 0.0f, 0.0f),
+		make_float3(0.0f, 0.0f, 128.0f));
 
-	// Create box
-	Geometry box = context->createGeometry();
-	box->setPrimitiveCount(1u);
-	box->setBoundingBoxProgram(box_bounds);
-	box->setIntersectionProgram(box_intersect);
-	box["boxmin"]->setFloat(-2.0f, 0.0f, -2.0f);
-	box["boxmax"]->setFloat(2.0f, 7.0f, 2.0f);
-
-
-
-	// Create a sphere
-	sphere = context->createGeometry(); // Create a new empty graph node
-	sphere->setPrimitiveCount(1u);				 // Number of possible primitive intersections in the node
-	float4 sphereData = make_float4(0.0f, 0.0f, 0.0f, 5.0f); // .xyz = Position, .w = radius
-
-	// Link sphere programs and variables
-	ptx = sutil::getPtxString(PROJECT_NAME, "sphere_model.cu");
-	Program sphere_bounds = context->createProgramFromPTXString(ptx, "bounds");
-	Program sphere_intersect = context->createProgramFromPTXString(ptx, "robust_intersect");
-	sphere->setBoundingBoxProgram(sphere_bounds);
-	sphere->setIntersectionProgram(sphere_intersect);
-	sphere["sphere"]->setFloat(sphereData);
-
-	// Sphere material
-	std::string sphere_chname = "closest_hit_radiance0"; // Sphere closest hit program
-	Material sphere_matl = context->createMaterial();
-	Program sphere_ch = context->createProgramFromPTXString(tutorial_ptx, sphere_chname.c_str());
-	Program sphere_ah = context->createProgramFromPTXString(tutorial_ptx, "any_hit");
-	sphere_matl->setAnyHitProgram(0, sphere_ah);
-	sphere_matl->setClosestHitProgram(0, sphere_ch); // Closest hit shading
-
-	// Sphere material properties
-	sphere_matl["Ka"]->setFloat(0.3f, 0.3f, 0.3f);
-	sphere_matl["Kd"]->setFloat(0.6f, 0.7f, 0.8f);
-	sphere_matl["Ks"]->setFloat(0.8f, 0.9f, 0.8f);
-	sphere_matl["phong_exp"]->setFloat(88);
-	sphere_matl["reflectivity_n"]->setFloat(0.2f, 0.2f, 0.2f);
-
-
-	// Floor geometry
-	Geometry parallelogram = context->createGeometry();
-	parallelogram->setPrimitiveCount(1u);
-	ptx = sutil::getPtxString(PROJECT_NAME, "parallelogram.cu");
-	parallelogram->setBoundingBoxProgram(context->createProgramFromPTXString(ptx, "bounds"));
-	parallelogram->setIntersectionProgram(context->createProgramFromPTXString(ptx, "intersect"));
-	float3 anchor = make_float3(-64.0f, 0.01f, -64.0f);
-	float3 v1 = make_float3(128.0f, 0.0f, 0.0f);
-	float3 v2 = make_float3(0.0f, 0.0f, 128.0f);
-	float3 normal = cross(v2, v1);
-	normal = normalize(normal);
-	float d = dot(normal, anchor);
-	v1 *= 1.0f / dot(v1, v1);
-	v2 *= 1.0f / dot(v2, v2);
-	float4 plane = make_float4(normal, d);
-	parallelogram["plane"]->setFloat(plane);
-	parallelogram["v1"]->setFloat(v1);
-	parallelogram["v2"]->setFloat(v2);
-	parallelogram["anchor"]->setFloat(anchor);
-
-	// Materials
-	std::string box_chname;
-	if (tutorial_number >= 8) {
-		box_chname = "box_closest_hit_radiance";
-	}
-	else if (tutorial_number >= 3) {
-		box_chname = "closest_hit_radiance3";
-	}
-	else if (tutorial_number >= 2) {
-		box_chname = "closest_hit_radiance2";
-	}
-	else if (tutorial_number >= 1) {
-		box_chname = "closest_hit_radiance1";
-	}
-	else {
-		box_chname = "closest_hit_radiance0";
-	}
-
-	Material box_matl = context->createMaterial();
-	Program box_ch = context->createProgramFromPTXString(tutorial_ptx, box_chname.c_str());
-	box_matl->setClosestHitProgram(0, box_ch);
-	if (tutorial_number >= 3) {
-		Program box_ah = context->createProgramFromPTXString(tutorial_ptx, "any_hit_shadow");
-		box_matl->setAnyHitProgram(1, box_ah);
-	}
-	box_matl["Ka"]->setFloat(0.3f, 0.3f, 0.3f);
-	box_matl["Kd"]->setFloat(0.6f, 0.7f, 0.8f);
-	box_matl["Ks"]->setFloat(0.8f, 0.9f, 0.8f);
-	box_matl["phong_exp"]->setFloat(88);
-	box_matl["reflectivity_n"]->setFloat(0.2f, 0.2f, 0.2f);
-
-	std::string floor_chname;
-	if (tutorial_number >= 7) {
-		floor_chname = "floor_closest_hit_radiance";
-	}
-	else if (tutorial_number >= 6) {
-		floor_chname = "floor_closest_hit_radiance5";
-	}
-	else if (tutorial_number >= 4) {
-		floor_chname = "floor_closest_hit_radiance4";
-	}
-	else if (tutorial_number >= 3) {
-		floor_chname = "closest_hit_radiance3";
-	}
-	else if (tutorial_number >= 2) {
-		floor_chname = "closest_hit_radiance2";
-	}
-	else if (tutorial_number >= 1) {
-		floor_chname = "closest_hit_radiance1";
-	}
-	else {
-		floor_chname = "closest_hit_radiance0";
-	}
-
-	Material floor_matl = context->createMaterial();
-	Program floor_ch = context->createProgramFromPTXString(tutorial_ptx, floor_chname.c_str());
-	floor_matl->setClosestHitProgram(0, floor_ch);
-	if (tutorial_number >= 3) {
-		Program floor_ah = context->createProgramFromPTXString(tutorial_ptx, "any_hit_shadow");
-		floor_matl->setAnyHitProgram(1, floor_ah);
-	}
-	floor_matl["Ka"]->setFloat(0.3f, 0.3f, 0.1f);
-	floor_matl["Kd"]->setFloat(194 / 255.f*.6f, 186 / 255.f*.6f, 151 / 255.f*.6f);
-	floor_matl["Ks"]->setFloat(0.4f, 0.4f, 0.4f);
-	floor_matl["reflectivity"]->setFloat(0.1f, 0.1f, 0.1f);
-	floor_matl["reflectivity_n"]->setFloat(0.05f, 0.05f, 0.05f);
-	floor_matl["phong_exp"]->setFloat(88);
-	floor_matl["tile_v0"]->setFloat(0.25f, 0, .15f);
-	floor_matl["tile_v1"]->setFloat(-.15f, 0, 0.25f);
-	floor_matl["crack_color"]->setFloat(0.1f, 0.1f, 0.1f);
-	floor_matl["crack_width"]->setFloat(0.02f);
+	movingSphere = sphereInstance;
 
 	// Create GIs for each piece of geometry
 	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
-	gis.push_back(context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1)); // + 1 designates how many materials we are using
-	gis.push_back(context->createGeometryInstance(box, &box_matl, &box_matl + 1));
-	gis.push_back(context->createGeometryInstance(parallelogram, &floor_matl, &floor_matl + 1));
+	gis.push_back(sphereInstance);
+	gis.push_back(boxInstance);
+	gis.push_back(planeInstance);
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
 	GeometryGroup geometrygroup = context->createGeometryGroup();
 	geometrygroup->setChildCount(static_cast<unsigned int>(gis.size()));
-	geometrygroup->setChild(0, gis[0]);
-	geometrygroup->setChild(1, gis[1]);
-	geometrygroup->setChild(2, gis[2]);
+	for (uint i = 0; i < gis.size(); i++)
+	{
+		geometrygroup->setChild(i, gis[i]);
+	}
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(geometrygroup);
-	context["top_shadower"]->set(geometrygroup);
-
 }
 
 
@@ -404,14 +272,14 @@ void setupLights()
 
 void updateGeometry()
 {
-	if (sphere)
+	if (movingSphere)
 	{
 		// Bounce sphere around
 		double yMovement = sin(frame_count / 60.0f) * 3.0f;
 		double xMovement = sin(frame_count / 70.0f) * 4.0f;
 		double zMovement = sin(frame_count / 80.0f) * 2.0f;
 		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
-		sphere["sphere"]->setFloat(sphereData);
+		movingSphere["sphere"]->setFloat(sphereData);
 	}
 }
 
@@ -653,17 +521,6 @@ int main(int argc, char** argv)
 			}
 			texture_path = argv[++i];
 		}
-		else if (arg == "-T" || arg == "--tutorial-number")
-		{
-			if (i == argc - 1) {
-				printUsageAndExit(argv[0]);
-			}
-			tutorial_number = atoi(argv[++i]);
-			if (tutorial_number < 0 || tutorial_number > 11) {
-				std::cerr << "Tutorial number (" << tutorial_number << ") is out of range [0..11]\n";
-				printUsageAndExit(argv[0]);
-			}
-		}
 		else
 		{
 			std::cerr << "Unknown option '" << arg << "'\n";
@@ -683,14 +540,12 @@ int main(int argc, char** argv)
 		glewInit();
 #endif
 
-		// load the ptx source associated with tutorial number
-		std::stringstream ss;
-		ss << "tutorial" << tutorial_number << ".cu";
-		std::string tutorial_ptx_path = ss.str();
-		tutorial_ptx = sutil::getPtxString(PROJECT_NAME, tutorial_ptx_path.c_str());
+		// Load PTX source
+		std::string scene_name = "ray_scene.cu";
+		scene_ptx = sutil::getPtxString(PROJECT_NAME, scene_name.c_str());
 
 		createContext();
-		createGeometry();
+		CreateScene();
 		setupCamera();
 		setupLights();
 
