@@ -48,6 +48,10 @@ struct PerRayData_radiance
 
 	int numIntersections;
 	float2 intersections[INTERSECTION_SAMPLES]; // We'll store t-values of all intersections in this buffer
+	float closestTval; // The z-depth of the closest object in the scene
+
+	// Shading specific variables
+	float3 closestShadingNormal;
 };
 
 struct PerRayData_shadow

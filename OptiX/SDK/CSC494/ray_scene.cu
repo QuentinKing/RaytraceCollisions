@@ -116,13 +116,20 @@ RT_PROGRAM void orthographic_camera()
 	prd.importance = 1.f;
 	prd.depth = 0;
 	prd.numIntersections = 0;
+	prd.closestTval = 999999.0f;
+
+	prd.closestShadingNormal = make_float3(0.0, 1.0, 0.0);
 
 	rtTrace(top_object, ray, prd);
 
 	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	if (prd.numIntersections > 0)
 	{
-		output_buffer[launch_index] = CheckIntersectionOverlap(prd) ? make_color(make_float3(0, 0, 0)) : make_color(make_float3(1, 1, 1));
+		// Check for intersections (and fill in the intersection buffer)
+		CheckIntersectionOverlap(prd);
+
+		// Shade the object with the properties we saved while raycasting
+		output_buffer[launch_index] = make_color(prd.closestShadingNormal);
 	}
 	else
 	{
@@ -164,6 +171,14 @@ RT_PROGRAM void any_hit()
 	{
 		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
 		prd_radiance.numIntersections++;
+
+		// TODO: Don't like the float2 type here
+		if (t_values.x < prd_radiance.closestTval)
+		{
+			// Update shading properties since this is now the closest object
+			prd_radiance.closestTval = t_values.x;
+			prd_radiance.closestShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
+		}
 	}
 
 	rtIgnoreIntersection();
