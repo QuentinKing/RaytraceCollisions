@@ -12,6 +12,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include <math.h>
 #include <stdint.h>
 
@@ -20,6 +21,7 @@
 #include "commonStructs.h"
 #include "random.h"
 #include <Arcball.h>
+#include "RigidBody.h"
 #include "GeomteryCreator.h"
 
 using namespace optix;
@@ -38,6 +40,7 @@ uint32_t     width = 1080u;
 uint32_t     height = 720;
 bool         use_pbo = true;
 unsigned	 frame_count = 0;
+double		 last_update_time = 0;
 
 std::string  texture_path;
 const char*  scene_ptx;
@@ -45,6 +48,8 @@ const char*  scene_ptx;
 // Geometry state
 GeometryInstance movingSphere;
 GeometryInstance movingSphere2;
+
+std::vector<RigidBody> sceneRigidBodies;
 
 // Camera setup
 enum CameraType
@@ -288,6 +293,11 @@ void SetupLights()
 
 void UpdateGeometry()
 {
+	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
+	{
+		i->EulerStep(sutil::currentTime()-last_update_time);
+	}
+
 	if (movingSphere)
 	{
 		// Bounce sphere around
@@ -307,6 +317,8 @@ void UpdateGeometry()
 		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
 		movingSphere2["sphere"]->setFloat(sphereData);
 	}
+
+	last_update_time = sutil::currentTime();
 }
 
 void UpdateCamera()
