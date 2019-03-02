@@ -21,7 +21,8 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 	Program sphere_intersect = context->createProgramFromPTXString(ptx, "robust_intersect");
 	sphere->setBoundingBoxProgram(sphere_bounds);
 	sphere->setIntersectionProgram(sphere_intersect);
-	sphere["sphere"]->setFloat(sphereData);
+	sphere["position"]->setFloat(make_float3(sphereData));
+	sphere["radius"]->setFloat(sphereData.w);
 
 	// Create material
 	Material sphere_matl = context->createMaterial();

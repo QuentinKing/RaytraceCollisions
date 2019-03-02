@@ -30,7 +30,8 @@
 
 using namespace optix;
 
-rtDeclareVariable(float4, sphere, , );
+rtDeclareVariable(float3, position, , );
+rtDeclareVariable(float, radius, , );
 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -41,10 +42,9 @@ template<bool use_robust_method>
 static __device__
 void intersect_sphere(void)
 {
-	float3 center = make_float3(sphere);
+	float3 center = position;
 	float3 O = ray.origin - center;
 	float3 D = ray.direction;
-	float radius = sphere.w;
 
 	float b = dot(O, D);
 	float c = dot(O, O) - radius * radius;
@@ -105,8 +105,8 @@ RT_PROGRAM void robust_intersect(int primIdx)
 
 RT_PROGRAM void bounds(int, float result[6])
 {
-	const float3 cen = make_float3(sphere);
-	const float3 rad = make_float3(sphere.w);
+	const float3 cen = position;
+	const float3 rad = make_float3(radius);
 
 	optix::Aabb* aabb = (optix::Aabb*)result;
 

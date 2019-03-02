@@ -45,10 +45,7 @@ double		 last_update_time = 0;
 std::string  texture_path;
 const char*  scene_ptx;
 
-// Geometry state
-GeometryInstance movingSphere;
-GeometryInstance movingSphere2;
-
+// Geometry
 std::vector<RigidBody> sceneRigidBodies;
 
 // Camera setup
@@ -92,6 +89,7 @@ void CreateContext();
 void CreateScene();
 void SetupCamera();
 void SetupLights();
+void UpdateGeometry();
 void UpdateCamera();
 void glutInitialize(int* argc, char** argv);
 void glutRun();
@@ -151,6 +149,8 @@ void CreateContext()
 	// Note: high max depth for reflection and refraction through glass
 	context["max_depth"]->setInt(100);
 	context["scene_epsilon"]->setFloat(1.e-4f);
+
+	last_update_time = sutil::currentTime();
 
 	// Output buffer
 	// First allocate the memory for the GL buffer, then attach it to OptiX.
@@ -233,22 +233,26 @@ void CreateScene()
 {
 	GeometryCreator geometryCreator(context, PROJECT_NAME, SCENE_NAME);
 
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0,0,0), 3.0f);
-	GeometryInstance sphereInstance2 = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
-	//GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-2.0f, 0.0f, -2.0f), make_float3(2.0f, 7.0f, 2.0f));
+	// Geomtery Instance -> coupling geometry and materials together
+	std::vector<GeometryInstance> gis;
+
+	// Create rigidbody spheres
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
+	gis.push_back(sphereInstance);
+	RigidBody rigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
+	rigidBody.AddForce(make_float3(0.0f, 1.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
+	gis.push_back(sphereInstance);
+	rigidBody = RigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
+	rigidBody.AddForce(make_float3(0.0f, 0.5f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	// Creat floor (not a rigidbody)
 	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.01f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
 		make_float3(0.0f, 0.0f, 128.0f));
-
-	movingSphere = sphereInstance;
-	movingSphere2 = sphereInstance2;
-
-	// Create GIs for each piece of geometry
-	// Geomtery Instance -> coupling geometry and materials together
-	std::vector<GeometryInstance> gis;
-	gis.push_back(sphereInstance);
-	gis.push_back(sphereInstance2);
-	//gis.push_back(boxInstance);
 	gis.push_back(planeInstance);
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
@@ -296,26 +300,6 @@ void UpdateGeometry()
 	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
 	{
 		i->EulerStep(sutil::currentTime()-last_update_time);
-	}
-
-	if (movingSphere)
-	{
-		// Bounce sphere around
-		double yMovement = sin(frame_count / 60.0f) * 3.0f;
-		double xMovement = sin(frame_count / 70.0f) * 4.0f;
-		double zMovement = sin(frame_count / 80.0f) * 2.0f;
-		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
-		movingSphere["sphere"]->setFloat(sphereData);
-	}
-
-	if (movingSphere2)
-	{
-		// Bounce sphere around
-		double yMovement = -sin(frame_count / 60.0f) * 3.0f;
-		double xMovement = -sin(frame_count / 70.0f) * 4.0f;
-		double zMovement = -sin(frame_count / 80.0f) * 2.0f;
-		float4 sphereData = make_float4(xMovement, 7.0f + yMovement, zMovement, 3.0f);
-		movingSphere2["sphere"]->setFloat(sphereData);
 	}
 
 	last_update_time = sutil::currentTime();
