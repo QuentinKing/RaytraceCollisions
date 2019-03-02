@@ -28,4 +28,11 @@ void RigidBody::EulerStep(float deltaTime)
 
 	// Zero out force accumulation since we've passed it off into the velocity now
 	forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
+
+	ApplyDrag();
+}
+
+void RigidBody::ApplyDrag()
+{
+	velocity -= velocity * kDrag;
 }

@@ -24,6 +24,7 @@ public:
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
+	void ApplyDrag();
 
 	float GetMass()
 	{
@@ -52,6 +53,9 @@ public:
 
 private:
 	GeometryInstance mesh;
+
+	// TODO: Set based on geometry
+	float kDrag = 0.1f; // Coefficient of drag
 
 	float mass;
 	float3 position;

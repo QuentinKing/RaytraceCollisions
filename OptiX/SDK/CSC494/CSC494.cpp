@@ -240,13 +240,13 @@ void CreateScene()
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
 	gis.push_back(sphereInstance);
 	RigidBody rigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
-	rigidBody.AddForce(make_float3(0.0f, 1.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 10.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
 	gis.push_back(sphereInstance);
 	rigidBody = RigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
-	rigidBody.AddForce(make_float3(0.0f, 0.5f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 5.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	// Creat floor (not a rigidbody)
