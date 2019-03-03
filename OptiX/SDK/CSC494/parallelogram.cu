@@ -39,6 +39,7 @@ rtDeclareVariable(int, lgt_instance, , ) = { 0 };
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float2, t_values, attribute t_values, );
 rtDeclareVariable(int, lgt_idx, attribute lgt_idx, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
@@ -55,6 +56,7 @@ RT_PROGRAM void intersect(int primIdx)
 			float a2 = dot(v2, vi);
 			if (a2 >= 0 && a2 <= 1) {
 				if (rtPotentialIntersection(t)) {
+					t_values = make_float2(t, 999999.0);
 					shading_normal = geometric_normal = n;
 					texcoord = make_float3(a1, a2, 0);
 					lgt_idx = lgt_instance;

@@ -34,6 +34,8 @@ void RigidBody::EulerStep(float deltaTime)
 
 	// Zero out force accumulation since we've passed it off into the velocity now
 	forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
+
+	std::cout << position << std::endl;
 }
 
 void RigidBody::CalculateDerivatives(float3 &positionDeriv, float3 &velocityDeriv, float deltaTime)
@@ -53,7 +55,8 @@ bool RigidBody::HandlePlaneCollisions(float3 positionDeriv)
 	{
 		// Particle / plane collision detection
 		// Collision if this is less than zero
-		float sdf = dot(newPosition - i->point, i->normal);
+		// Right now, hardcoding it as a sphere with radius 3
+		float sdf = dot(newPosition - i->point, i->normal) - 3.0f;
 		if (sdf < 0.0f)
 		{
 			recalculate = true;

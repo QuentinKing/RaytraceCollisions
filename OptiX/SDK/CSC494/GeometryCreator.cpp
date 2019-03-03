@@ -60,7 +60,9 @@ GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v
 
 	Material plane_matl = context->createMaterial();
 	Program floor_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance0");
+	Program floor_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
 	plane_matl->setClosestHitProgram(0, floor_ch);
+	plane_matl->setAnyHitProgram(0, floor_ah);
 
 	return context->createGeometryInstance(parallelogram, &plane_matl, &plane_matl + 1);
 }
