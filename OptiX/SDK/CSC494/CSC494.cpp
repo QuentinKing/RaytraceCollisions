@@ -54,7 +54,7 @@ enum CameraType
 	Perspective = 0,
 	Orthographic = 1
 };
-const CameraType cameraType = CameraType::Orthographic;
+const CameraType cameraType = CameraType::Perspective;
 
 // Buffer to render
 enum RenderBuffer
@@ -236,24 +236,27 @@ void CreateScene()
 	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
 
-	// Create rigidbody spheres
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
-	gis.push_back(sphereInstance);
-	RigidBody rigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
-	rigidBody.AddForce(make_float3(0.0f, 10.0f, 0.0f));
-	sceneRigidBodies.push_back(rigidBody);
-
-	sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0, 0), 3.0f);
-	gis.push_back(sphereInstance);
-	rigidBody = RigidBody(sphereInstance, make_float3(0, 0, 0), 1.0f);
-	rigidBody.AddForce(make_float3(0.0f, 5.0f, 0.0f));
-	sceneRigidBodies.push_back(rigidBody);
-
-	// Creat floor (not a rigidbody)
-	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.01f, -64.0f),
+	// Create floor (not a rigidbody)
+	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.0f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
 		make_float3(0.0f, 0.0f, 128.0f));
 	gis.push_back(planeInstance);
+
+	// Create rigidbody spheres
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0.0f, 0), 3.0f);
+	gis.push_back(sphereInstance);
+	RigidBody rigidBody(sphereInstance, make_float3(0, 10.0, 0), 1.0f);
+	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 20.0f, 5.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0.0f, 0), 3.0f);
+	gis.push_back(sphereInstance);
+	rigidBody = RigidBody(sphereInstance, make_float3(1.0f, 9.0, 0), 1.0f);
+	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 20.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
 	GeometryGroup geometrygroup = context->createGeometryGroup();

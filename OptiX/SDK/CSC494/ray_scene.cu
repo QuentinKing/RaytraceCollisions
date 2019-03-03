@@ -95,10 +95,23 @@ RT_PROGRAM void perspective_camera()
 	prd.importance = 1.f;
 	prd.depth = 0;
 	prd.numIntersections = 0;
+	prd.closestTval = 999999.0f;
 
 	rtTrace(top_object, ray, prd);
 
-	output_buffer[launch_index] = make_color(prd.result);
+	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
+	if (prd.numIntersections > 0)
+	{
+		// Check for intersections (and fill in the intersection buffer)
+		CheckIntersectionOverlap(prd);
+
+		// Shade the object with the properties we saved while raycasting
+		output_buffer[launch_index] = make_color(prd.closestShadingNormal);
+	}
+	else
+	{
+		output_buffer[launch_index] = make_color(prd.result);
+	}
 }
 
 // Orthographic camera (easier calculations for intersection volumes)
