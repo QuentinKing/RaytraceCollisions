@@ -40,6 +40,8 @@ rtDeclareVariable(float3, texcoord, attribute texcoord, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
+rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(int, lgt_idx, attribute lgt_idx, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
@@ -55,7 +57,16 @@ RT_PROGRAM void intersect(int primIdx)
 		if (a1 >= 0 && a1 <= 1) {
 			float a2 = dot(v2, vi);
 			if (a2 >= 0 && a2 <= 1) {
-				if (rtPotentialIntersection(t)) {
+
+				// Always call the any hit function, so we have to report an intersection closer than 
+				// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
+				// function, make sure we ignore the intersection so it doesn't store this value.
+				bool ignore = t > current_closest; 
+				float modified_t_value = ignore ? current_closest - 1.0f : t;
+
+				if (rtPotentialIntersection(modified_t_value)) 
+				{
+					ignore_intersection = ignore;
 					t_values = make_float2(t, 999999.0);
 					shading_normal = geometric_normal = n;
 					texcoord = make_float3(a1, a2, 0);

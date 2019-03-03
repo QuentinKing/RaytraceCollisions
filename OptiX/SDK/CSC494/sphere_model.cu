@@ -27,6 +27,7 @@
  */
 
 #include <optix_world.h>
+#include "tutorial.h"
 
 using namespace optix;
 
@@ -36,7 +37,10 @@ rtDeclareVariable(float, radius, , );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
+rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+
 
 template<bool use_robust_method>
 static __device__
@@ -80,8 +84,15 @@ void intersect_sphere(void)
 		float t2 = (-b + sdisc) + (do_refine ? root1 : 0);
 		float2 a = make_float2(t1, t2);
 
-		if (rtPotentialIntersection(t1)) 
+		// Always call the any hit function, so we have to report an intersection closer than 
+		// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
+		// function, make sure we ignore the intersection so it doesn't store this value.
+		bool ignore = t1 > current_closest; 
+		float modified_t_value = ignore ? current_closest - 1.0f : t1;
+
+		if (rtPotentialIntersection(modified_t_value))
 		{
+			ignore_intersection = ignore;
 			t_values = a;
 			shading_normal = geometric_normal = (O + (root1 + root11)*D) / radius;
 			if (rtReportIntersection(0))
@@ -89,7 +100,6 @@ void intersect_sphere(void)
 		}
 	}
 }
-
 
 RT_PROGRAM void intersect(int primIdx)
 {

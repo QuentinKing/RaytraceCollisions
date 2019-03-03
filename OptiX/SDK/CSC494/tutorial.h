@@ -40,11 +40,15 @@ static __device__ __inline__ uchar4 make_color(const float3& c)
 		255u);                                                 /* A */
 }
 
+typedef float (*shade_func_t) (float, float);
+
 struct PerRayData_radiance
 {
+	float3 result;
 	float3 missColor;
 	float  importance;
 	int depth;
+	shade_func_t p_shade_func;
 
 	int numIntersections;
 	float2 intersections[INTERSECTION_SAMPLES]; // We'll store t-values of all intersections in this buffer

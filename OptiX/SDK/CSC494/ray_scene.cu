@@ -37,10 +37,6 @@ rtDeclareVariable(unsigned int, radiance_ray_type, , );
 rtDeclareVariable(float, scene_epsilon, , );
 rtDeclareVariable(rtObject, top_object, , );
 
-
-//
-// Pinhole camera implementation
-//
 rtDeclareVariable(float3, eye, , );
 rtDeclareVariable(float3, U, , );
 rtDeclareVariable(float3, V, , );
@@ -51,8 +47,12 @@ rtBuffer<uchar4, 2>              output_buffer;
 rtBuffer<uchar4, 2>              volume_buffer;
 
 // Volumetric variables
+rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, t_values, attribute t_values, );
+
+rtDeclareVariable(float3, bg_color, , );
+
 
 //
 // Collision volume functions
@@ -115,7 +115,7 @@ RT_PROGRAM void perspective_camera()
 		CheckIntersectionOverlap(prd);
 
 		// Shade the object with the properties we saved while raycasting
-		output_buffer[launch_index] = make_color(prd.closestShadingNormal);
+		output_buffer[launch_index] = make_color(prd.result);
 	}
 	else
 	{
@@ -151,7 +151,8 @@ RT_PROGRAM void orthographic_camera()
 		CheckIntersectionOverlap(prd);
 
 		// Shade the object with the properties we saved while raycasting
-		output_buffer[launch_index] = make_color(prd.closestShadingNormal);
+		// This is essentially the closest hit shader
+		output_buffer[launch_index] = make_color(prd.result);
 	}
 	else
 	{
@@ -166,7 +167,6 @@ RT_PROGRAM void orthographic_camera()
 
 // Miss program, stored in ray data and will be used if no intersections
 // along our ray were recorded
-rtDeclareVariable(float3, bg_color, , );
 RT_PROGRAM void miss()
 {
 	prd_radiance.missColor = bg_color;
@@ -182,18 +182,34 @@ RT_PROGRAM void any_hit()
 		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
 		prd_radiance.numIntersections++;
 
-		// TODO: Don't like the float2 type here
-		if (t_values.x < prd_radiance.closestTval)
+		// Is this the closest object we have seen so far?
+		if (min(t_values.x, t_values.y) < prd_radiance.closestTval)
 		{
 			// Update shading properties since this is now the closest object
-			prd_radiance.closestTval = t_values.x;
-			prd_radiance.closestShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
+			prd_radiance.closestTval = min(t_values.x, t_values.y);
+			prd_radiance.closestShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 		}
 	}
 
-	rtIgnoreIntersection();
+	if (ignore_intersection)
+		rtIgnoreIntersection();
 }
 
+//
+// Returns shading normal as the surface shading result
+// 
+RT_PROGRAM void closest_hit_radiance_sphere()
+{
+  prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
+}
+
+//
+// Returns shading normal as the surface shading result
+// 
+RT_PROGRAM void closest_hit_radiance_plane()
+{
+  prd_radiance.result = make_float3(0.0f, 1.0f, 0.0f);
+}
 
 // Exception program, deafult to some known exception color
 RT_PROGRAM void exception()
