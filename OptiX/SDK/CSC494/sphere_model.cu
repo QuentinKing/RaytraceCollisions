@@ -27,7 +27,6 @@
  */
 
 #include <optix_world.h>
-#include "tutorial.h"
 
 using namespace optix;
 

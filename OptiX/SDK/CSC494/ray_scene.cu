@@ -195,17 +195,13 @@ RT_PROGRAM void any_hit()
 		rtIgnoreIntersection();
 }
 
-//
-// Returns shading normal as the surface shading result
-// 
+// Closest hit shading for the spheres
 RT_PROGRAM void closest_hit_radiance_sphere()
 {
   prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
 }
 
-//
-// Returns shading normal as the surface shading result
-// 
+// Closest hit shading for the plane 
 RT_PROGRAM void closest_hit_radiance_plane()
 {
   prd_radiance.result = make_float3(0.0f, 1.0f, 0.0f);
