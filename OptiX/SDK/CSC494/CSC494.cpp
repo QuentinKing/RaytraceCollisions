@@ -18,7 +18,6 @@
 
 // User created headers / includes
 #include <sutil.h>
-#include "commonStructs.h"
 #include "random.h"
 #include <Arcball.h>
 #include "RigidBody.h"
@@ -88,7 +87,6 @@ void registerExitHandler();
 void CreateContext();
 void CreateScene();
 void SetupCamera();
-void SetupLights();
 void UpdateGeometry();
 void UpdateCamera();
 void glutInitialize(int* argc, char** argv);
@@ -152,8 +150,7 @@ void CreateContext()
 
 	last_update_time = sutil::currentTime();
 
-	// Output buffer
-	// First allocate the memory for the GL buffer, then attach it to OptiX.
+	// Output buffers
 	GLuint vbo = 0;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -182,50 +179,15 @@ void CreateContext()
 	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx, camera_name);
 	context->setRayGenerationProgram(0, ray_gen_program);
 
-	// Exception program
-	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
-	context->setExceptionProgram(0, exception_program);
-	context["bad_color"]->setFloat(1.0f, 0.0f, 1.0f);
-
 	// Miss program
 	const std::string miss_name = "miss";
 	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, miss_name));
-	const float3 default_color = make_float3(1.0f, 1.0f, 1.0f);
-	const std::string texpath = texture_path + "/" + std::string("CedarCity.hdr");
-	context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, default_color));
 	context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
 
-	// 3D solid noise buffer, 1 float channel, all entries in the range [0.0, 1.0].
-
-	const int tex_width = 64;
-	const int tex_height = 64;
-	const int tex_depth = 64;
-	Buffer noiseBuffer = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_FLOAT, tex_width, tex_height, tex_depth);
-	float *tex_data = (float *)noiseBuffer->map();
-
-	// Random noise in range [0, 1]
-	for (int i = tex_width * tex_height * tex_depth; i > 0; i--) {
-		// One channel 3D noise in [0.0, 1.0] range.
-		static unsigned int seed = 0u;
-		*tex_data++ = rnd(seed);
-	}
-	noiseBuffer->unmap();
-
-
-	// Noise texture sampler
-	TextureSampler noiseSampler = context->createTextureSampler();
-
-	noiseSampler->setWrapMode(0, RT_WRAP_REPEAT);
-	noiseSampler->setWrapMode(1, RT_WRAP_REPEAT);
-	noiseSampler->setFilteringModes(RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE);
-	noiseSampler->setIndexingMode(RT_TEXTURE_INDEX_NORMALIZED_COORDINATES);
-	noiseSampler->setReadMode(RT_TEXTURE_READ_NORMALIZED_FLOAT);
-	noiseSampler->setMaxAnisotropy(1.0f);
-	noiseSampler->setMipLevelCount(1);
-	noiseSampler->setArraySize(1);
-	noiseSampler->setBuffer(0, 0, noiseBuffer);
-
-	context["noise_texture"]->setTextureSampler(noiseSampler);
+	// Exception program
+	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
+	context->setExceptionProgram(0, exception_program);
+	context["bad_color"]->setFloat(1.0f, 0.0f, 0.80f);
 }
 
 
@@ -278,24 +240,6 @@ void SetupCamera()
 	camera_up = make_float3(0.0f, 1.0f, 0.0f);
 
 	camera_rotate = Matrix4x4::identity();
-}
-
-
-void SetupLights()
-{
-
-	BasicLight lights[] = {
-		{ make_float3(-5.0f, 60.0f, -16.0f), make_float3(1.0f, 1.0f, 1.0f), 1 }
-	};
-
-	Buffer light_buffer = context->createBuffer(RT_BUFFER_INPUT);
-	light_buffer->setFormat(RT_FORMAT_USER);
-	light_buffer->setElementSize(sizeof(BasicLight));
-	light_buffer->setSize(sizeof(lights) / sizeof(lights[0]));
-	memcpy(light_buffer->map(), lights, sizeof(lights));
-	light_buffer->unmap();
-
-	context["lights"]->set(light_buffer);
 }
 
 void UpdateGeometry()
@@ -598,7 +542,6 @@ int main(int argc, char** argv)
 		CreateContext();
 		CreateScene();
 		SetupCamera();
-		SetupLights();
 
 		context->validate();
 

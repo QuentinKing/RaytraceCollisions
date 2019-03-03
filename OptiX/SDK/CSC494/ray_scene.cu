@@ -54,6 +54,10 @@ rtBuffer<uchar4, 2>              volume_buffer;
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, t_values, attribute t_values, );
 
+//
+// Collision volume functions
+//
+
 // Checks given a list of entry and exit points if any of them overlap
 // indicating that an intersection has occured for the current ray
 bool CheckIntersectionOverlap(PerRayData_radiance prd)
@@ -80,7 +84,12 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 	return false;
 }
 
-// Perspective camera (Not in use currently)
+
+//
+// Camera functions
+//
+
+// Perspective camera
 RT_PROGRAM void perspective_camera()
 {
 	size_t2 screen = output_buffer.size();
@@ -110,7 +119,7 @@ RT_PROGRAM void perspective_camera()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_color(prd.result);
+		output_buffer[launch_index] = make_color(prd.missColor);
 	}
 }
 
@@ -146,37 +155,25 @@ RT_PROGRAM void orthographic_camera()
 	}
 	else
 	{
-		output_buffer[launch_index] = make_color(prd.result);
+		output_buffer[launch_index] = make_color(prd.missColor);
 	}
 }
 
+
 //
-// Returns solid color for miss rays
+// Raytrace functions
 //
+
+// Miss program, stored in ray data and will be used if no intersections
+// along our ray were recorded
 rtDeclareVariable(float3, bg_color, , );
 RT_PROGRAM void miss()
 {
-	prd_radiance.result = bg_color;
+	prd_radiance.missColor = bg_color;
 }
 
 
-//
-// Returns shading normal as the surface shading result
-// 
-RT_PROGRAM void closest_hit_radiance0()
-{
-	prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
-}
-
-//
-// Returns shading normal as the surface shading result
-// 
-RT_PROGRAM void closest_hit_radiance1()
-{
-	prd_radiance.result = make_float3(1.0f, 1.0f, 1.0f);
-}
-
-// Any hit program
+// Any hit program, store depth value and potential shading properties
 RT_PROGRAM void any_hit()
 {
 	// Record our intersection values
@@ -197,9 +194,8 @@ RT_PROGRAM void any_hit()
 	rtIgnoreIntersection();
 }
 
-//
-// Set pixel to solid color upon failur
-//
+
+// Exception program, deafult to some known exception color
 RT_PROGRAM void exception()
 {
 	output_buffer[launch_index] = make_color(bad_color);

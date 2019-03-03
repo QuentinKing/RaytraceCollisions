@@ -34,8 +34,6 @@ void RigidBody::EulerStep(float deltaTime)
 
 	// Zero out force accumulation since we've passed it off into the velocity now
 	forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
-
-	std::cout << position << std::endl;
 }
 
 void RigidBody::CalculateDerivatives(float3 &positionDeriv, float3 &velocityDeriv, float deltaTime)
@@ -78,4 +76,34 @@ void RigidBody::ApplyGravity()
 void RigidBody::ApplyDrag()
 {
 	AddForce(-velocity * kDrag);
+}
+
+void RigidBody::RegisterPlane(float3 point, float3 normal)
+{
+	planeCollisions.push_back(PlaneData(point, normal));
+}
+
+void RigidBody::AddForce(float3 force)
+{
+	forceAccumulation += force;
+}
+
+float RigidBody::GetMass()
+{
+	return mass;
+}
+
+float3 RigidBody::GetPosition()
+{
+	return position;
+}
+
+float3 RigidBody::GetVelocity()
+{
+	return velocity;
+}
+
+float3 RigidBody::GetForces()
+{
+	return forceAccumulation;
 }

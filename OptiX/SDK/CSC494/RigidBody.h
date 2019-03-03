@@ -24,7 +24,6 @@ struct PlaneData
 class RigidBody
 {
 public:
-
 	RigidBody(GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
 		mesh(mesh),
 		position(startingPosition),
@@ -39,36 +38,13 @@ public:
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
+	void RegisterPlane(float3 point, float3 normal);
+	void AddForce(float3 force);
 
-	void RegisterPlane(float3 point, float3 normal)
-	{
-		planeCollisions.push_back(PlaneData(point, normal));
-	}
-
-	float GetMass()
-	{
-		return mass;
-	}
-
-	float3 GetPosition()
-	{
-		return position;
-	}
-
-	float3 GetVelocity()
-	{
-		return velocity;
-	}
-
-	void AddForce(float3 force)
-	{
-		forceAccumulation += force;
-	}
-
-	float3 GetForces()
-	{
-		return forceAccumulation;
-	}
+	float GetMass();
+	float3 GetPosition();
+	float3 GetVelocity();
+	float3 GetForces();
 
 private:
 	void ApplyGravity();
