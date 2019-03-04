@@ -150,6 +150,10 @@ void CreateContext()
 	context["max_depth"]->setInt(100);
 	context["scene_epsilon"]->setFloat(1.e-4f);
 
+	// Ray types
+	context["radiance_ray_type"]->setUint( 0 );
+    context["shadow_ray_type"]->setUint( 1 );
+
 	last_update_time = sutil::currentTime();
 
 	// Output buffers
@@ -232,6 +236,7 @@ void CreateScene()
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(geometrygroup);
+	context["top_shadower"]->set(geometrygroup);
 
 	CreateLights();
 }
@@ -240,7 +245,7 @@ void CreateLights()
 {
 	Light lights[] =
 	{
-        { make_float3( 0.0f, 10.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
+        { make_float3( 0.0f, 20.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
     };
 
     Buffer light_buffer = context->createBuffer( RT_BUFFER_INPUT );

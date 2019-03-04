@@ -30,3 +30,7 @@ struct PerRayData_radiance
 	float3 closestShadingNormal;
 };
 
+struct PerRayData_shadow
+{
+	float attenuation;
+};

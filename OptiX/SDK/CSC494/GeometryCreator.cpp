@@ -31,6 +31,10 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 	sphere_matl->setClosestHitProgram(0, sphere_ch);
 	sphere_matl->setAnyHitProgram(0, sphere_ah);
 
+	// Shadow caster program
+	Program sphere_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
+	sphere_matl->setAnyHitProgram(1, sphere_shadow);
+
 	// Hardcode in some material properties for now (color, etc..)
 	sphere_matl["ambientColorIntensity"]->setFloat( 0.3f, 0.3f, 0.3f );
     sphere_matl["diffuseColorIntensity"]->setFloat( 0.6f, 0.7f, 0.8f );
@@ -69,6 +73,12 @@ GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v
 	Program floor_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
 	plane_matl->setClosestHitProgram(0, floor_ch);
 	plane_matl->setAnyHitProgram(0, floor_ah);
+
+	// Hardcode in some material properties for now (color, etc..)
+	plane_matl["ambientColorIntensity"]->setFloat( 0.2f, 0.8f, 0.3f );
+    plane_matl["diffuseColorIntensity"]->setFloat( 0.2f, 0.8f, 0.3f );
+	plane_matl["specularColorIntensity"]->setFloat( 0.0f, 0.0f, 0.0f );
+	plane_matl["specularPower"]->setFloat( 1.0f );
 
 	return context->createGeometryInstance(parallelogram, &plane_matl, &plane_matl + 1);
 }
