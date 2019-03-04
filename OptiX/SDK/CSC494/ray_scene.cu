@@ -27,30 +27,49 @@
  */
 
 #include "tutorial.h"
+#include "Lights.h"
 
+// Ray data
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
-
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
-
 rtDeclareVariable(unsigned int, radiance_ray_type, , );
 rtDeclareVariable(float, scene_epsilon, , );
 rtDeclareVariable(rtObject, top_object, , );
+rtDeclareVariable(float, closestHitDist, rtIntersectionDistance, );
 
+// Camera variables
 rtDeclareVariable(float3, eye, , );
 rtDeclareVariable(float3, U, , );
 rtDeclareVariable(float3, V, , );
 rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float3, bad_color, , );
 rtDeclareVariable(float2, orthoCameraSize, , );
+
+// Output buffers
 rtBuffer<uchar4, 2>              output_buffer;
 rtBuffer<uchar4, 2>              volume_buffer;
 
 // Volumetric variables
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
-rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 rtDeclareVariable(float2, t_values, attribute t_values, );
 
+// Shading values
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
+
+// Light values
+rtDeclareVariable(float3, ambientLightColor, , );
+rtBuffer<Light> lights; 
+
+// Material values
+rtDeclareVariable(float3, ambientColorIntensity, , );
+rtDeclareVariable(float3, diffuseColorIntensity, , );
+rtDeclareVariable(float3, specularColorIntensity, , );
+rtDeclareVariable(float,   specularPower, , );
+
+
+// Scene values
 rtDeclareVariable(float3, bg_color, , );
 
 
@@ -198,7 +217,43 @@ RT_PROGRAM void any_hit()
 // Closest hit shading for the spheres
 RT_PROGRAM void closest_hit_radiance_sphere()
 {
-  prd_radiance.result = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal))*0.5f + 0.5f;
+	float3 world_geo_normal = normalize(rtTransformNormal(
+										RT_OBJECT_TO_WORLD,
+										geometric_normal));
+
+	float3 world_shade_normal = normalize(rtTransformNormal(
+											RT_OBJECT_TO_WORLD,
+											shading_normal));
+
+	// Handles back face rendering
+	float3 ffnormal = faceforward(world_shade_normal,
+									-ray.direction,
+									world_geo_normal);
+
+	float3 color = ambientColorIntensity * ambientLightColor;
+ 
+	float3 hit_point = ray.origin + closestHitDist * ray.direction;
+
+	// Phong diffuse shading
+	for(int i = 0; i < lights.size(); ++i) 
+	{
+		Light light = lights[i];
+		float3 L = normalize(light.pos - hit_point);
+		float nDl = __saturatef(dot( ffnormal, L));
+		
+		if( nDl > 0 )
+		{
+		  float3 Lc = light.color;
+		  color += diffuseColorIntensity  * nDl * Lc;
+
+		  float3 H = normalize(L - ray.direction); // half way vector
+		  float nDh = dot( ffnormal, H );
+		  if(nDh > 0)
+			color += specularColorIntensity * Lc * pow(nDh, specularPower);
+		}
+	}
+
+	prd_radiance.result = color;
 }
 
 // Closest hit shading for the plane 

@@ -22,6 +22,7 @@
 #include <Arcball.h>
 #include "RigidBody.h"
 #include "GeomteryCreator.h"
+#include "Lights.h"
 
 using namespace optix;
 
@@ -86,6 +87,7 @@ void destroyContext();
 void registerExitHandler();
 void CreateContext();
 void CreateScene();
+void CreateLights();
 void SetupCamera();
 void UpdateGeometry();
 void UpdateCamera();
@@ -230,8 +232,27 @@ void CreateScene()
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(geometrygroup);
+
+	CreateLights();
 }
 
+void CreateLights()
+{
+	Light lights[] =
+	{
+        { make_float3( 0.0f, 10.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
+    };
+
+    Buffer light_buffer = context->createBuffer( RT_BUFFER_INPUT );
+    light_buffer->setFormat( RT_FORMAT_USER );
+    light_buffer->setElementSize( sizeof( Light ) );
+    light_buffer->setSize( sizeof(lights)/sizeof(lights[0]) );
+    memcpy(light_buffer->map(), lights, sizeof(lights));
+    light_buffer->unmap();
+
+	context["ambientLightColor"]->setFloat( 0.31f, 0.33f, 0.28f );
+    context["lights"]->set( light_buffer );
+}
 
 void SetupCamera()
 {

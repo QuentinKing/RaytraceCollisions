@@ -31,6 +31,12 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 	sphere_matl->setClosestHitProgram(0, sphere_ch);
 	sphere_matl->setAnyHitProgram(0, sphere_ah);
 
+	// Hardcode in some material properties for now (color, etc..)
+	sphere_matl["ambientColorIntensity"]->setFloat( 0.3f, 0.3f, 0.3f );
+    sphere_matl["diffuseColorIntensity"]->setFloat( 0.6f, 0.7f, 0.8f );
+	sphere_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
+	sphere_matl["specularPower"]->setFloat( 88.0f );
+
 	// Create Instance
 	return context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1); // + 1 designates how many materials we are using
 }

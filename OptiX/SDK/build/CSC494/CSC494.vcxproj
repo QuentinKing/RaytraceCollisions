@@ -327,6 +327,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="..\..\CSC494\RigidBody.cpp" />
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\CSC494.cpp" />
     <ClInclude Include="..\..\CSC494\GeomteryCreator.h" />
+    <ClInclude Include="..\..\CSC494\Lights.h" />
     <ClInclude Include="..\..\CSC494\RigidBody.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h" />

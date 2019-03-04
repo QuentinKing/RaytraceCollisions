@@ -24,6 +24,9 @@
     <ClInclude Include="..\..\CSC494\RigidBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\CSC494\Lights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\CMakeLists.txt" />
