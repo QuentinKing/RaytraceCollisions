@@ -204,6 +204,9 @@ void CreateScene()
 	// Geomtery Instance -> coupling geometry and materials together
 	std::vector<GeometryInstance> gis;
 
+	// Create root scene group
+	Group sceneGroup = context->createGroup();
+
 	// Create floor (not a rigidbody)
 	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.0f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
@@ -226,11 +229,22 @@ void CreateScene()
 	sceneRigidBodies.push_back(rigidBody);
 
 	// Create rigidbody box
+	GeometryGroup boxGroup = context->createGeometryGroup();
+	boxGroup->setChildCount(1);
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-9.0f, 3.0f, 0.0f), make_float3(3.0f, 3.0f, 3.0f));
-	gis.push_back(boxInstance);
 	rigidBody = RigidBody(boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
+	boxGroup->setChild(0, boxInstance);
+	boxGroup->setAcceleration(context->createAcceleration("NoAccel"));
+	Transform boxTransform = context->createTransform();
+	float m[16] ={ cosf(3.14/4.0),sinf(3.14/4.0),0,0,
+				  -sinf(3.14/4.0),cosf(3.14/4.0),0,0,
+				   0,0,1,0,
+				   0,0,0,1 };
+    boxTransform->setMatrix( false, m, NULL );
+	boxTransform->setChild(boxGroup);
+	boxGroup->getAcceleration()->markDirty();
 
 
 	// Geometry group -> coupling some number of instances with an acceleration structure
@@ -242,8 +256,14 @@ void CreateScene()
 	}
 	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
 
-	context["top_object"]->set(geometrygroup);
-	context["top_shadower"]->set(geometrygroup);
+	// Set up scene group
+	sceneGroup->setChildCount(2);
+	sceneGroup->setChild(0, geometrygroup);
+	sceneGroup->setChild(1, boxTransform);
+	sceneGroup->setAcceleration(context->createAcceleration("NoAccel"));
+
+	context["top_object"]->set(sceneGroup);
+	context["top_shadower"]->set(sceneGroup);
 
 	CreateLights();
 }
