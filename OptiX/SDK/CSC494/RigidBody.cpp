@@ -14,7 +14,9 @@ void RigidBody::EulerStep(float deltaTime)
 	float3 positionDeriv;
 	float3 velocityDeriv;
 
-	ApplyGravity();
+	// Apply continous forces
+	if (this->useGravity)
+		ApplyGravity();
 	ApplyDrag();
 
 	CalculateDerivatives(positionDeriv, velocityDeriv, deltaTime);
@@ -78,6 +80,7 @@ void RigidBody::ApplyDrag()
 	AddForce(-velocity * kDrag);
 }
 
+// TODO: Delete this. just testing out some physic responses
 void RigidBody::RegisterPlane(float3 point, float3 normal)
 {
 	planeCollisions.push_back(PlaneData(point, normal));
@@ -86,6 +89,11 @@ void RigidBody::RegisterPlane(float3 point, float3 normal)
 void RigidBody::AddForce(float3 force)
 {
 	forceAccumulation += force;
+}
+
+void RigidBody::UseGravity(bool useGravity)
+{
+	this->useGravity = useGravity;
 }
 
 float RigidBody::GetMass()

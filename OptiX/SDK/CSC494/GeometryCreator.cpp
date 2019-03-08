@@ -83,7 +83,7 @@ GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v
 	return context->createGeometryInstance(parallelogram, &plane_matl, &plane_matl + 1);
 }
 
-GeometryInstance GeometryCreator::CreateBox(float3 boxMin, float3 boxMax)
+GeometryInstance GeometryCreator::CreateBox(float3 position, float3 axisLengths)
 {
 	// Create geometry
 	Geometry box = context->createGeometry();
@@ -96,13 +96,25 @@ GeometryInstance GeometryCreator::CreateBox(float3 boxMin, float3 boxMax)
 
 	box->setBoundingBoxProgram(box_bounds);
 	box->setIntersectionProgram(box_intersect);
-	box["boxmin"]->setFloat(-2.0f, 0.0f, -2.0f);
-	box["boxmax"]->setFloat(2.0f, 7.0f, 2.0f);
+	box["position"]->setFloat(position);
+	box["axisLengths"]->setFloat(axisLengths);
 
 	// Create Material
 	Material box_matl = context->createMaterial();
-	Program box_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance0");
+	Program box_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_box");
+	Program box_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
 	box_matl->setClosestHitProgram(0, box_ch);
+	box_matl->setAnyHitProgram(0, box_ah);
+
+	// Shadow caster program
+	Program box_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
+	box_matl->setAnyHitProgram(1, box_shadow);
+
+	// Hardcode in some material properties for now (color, etc..)
+	box_matl["ambientColorIntensity"]->setFloat( 0.1f, 0.1f, 0.1f );
+    box_matl["diffuseColorIntensity"]->setFloat( 0.8f, 0.2f, 0.8f );
+	box_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
+	box_matl["specularPower"]->setFloat( 88.0f );
 
 	return context->createGeometryInstance(box, &box_matl, &box_matl + 1);
 }

@@ -40,6 +40,7 @@ public:
 	void EulerStep(float deltaTime);
 	void RegisterPlane(float3 point, float3 normal);
 	void AddForce(float3 force);
+	void UseGravity(bool useGravity);
 
 	float GetMass();
 	float3 GetPosition();

@@ -331,6 +331,59 @@ RT_PROGRAM void closest_hit_radiance_plane()
 	prd_radiance.result = color;
 }
 
+// Closest hit shading for the spheres
+RT_PROGRAM void closest_hit_radiance_box()
+{
+	float3 world_geo_normal = normalize(rtTransformNormal(
+										RT_OBJECT_TO_WORLD,
+										geometric_normal));
+
+	float3 world_shade_normal = normalize(rtTransformNormal(
+											RT_OBJECT_TO_WORLD,
+											shading_normal));
+
+	// Handles back face rendering
+	float3 ffnormal = faceforward(world_shade_normal,
+									-ray.direction,
+									world_geo_normal);
+
+	float3 color = ambientColorIntensity * ambientLightColor;
+ 
+	float3 hit_point = ray.origin + closestHitDist * ray.direction;
+
+	// Phong diffuse shading
+	for(int i = 0; i < lights.size(); ++i) 
+	{
+		Light light = lights[i];
+		float3 L = normalize(light.pos - hit_point);
+		float nDl = __saturatef(dot( ffnormal, L));
+		
+		if( nDl > 0 )
+		{
+			// Cast a shadow ray
+			PerRayData_shadow shadow_prd;
+			shadow_prd.attenuation = 1.0f;
+			float Ldist = length(light.pos - hit_point);
+			optix::Ray shadow_ray(hit_point, L, shadow_ray_type, scene_epsilon, Ldist );
+			rtTrace(top_shadower, shadow_ray, shadow_prd);
+			float light_attenuation = shadow_prd.attenuation;
+
+			if (light_attenuation > 0.0f)
+			{
+				float3 Lc = light.color * light_attenuation;
+				color += diffuseColorIntensity * nDl * Lc;
+
+				float3 H = normalize(L - ray.direction); // half way vector
+				float nDh = dot(ffnormal, H);
+				if (nDh > 0)
+					color += specularColorIntensity * Lc * pow(nDh, specularPower);
+			}
+		}
+	}
+
+	prd_radiance.result = color;
+}
+
 // Exception program, deafult to some known exception color
 RT_PROGRAM void exception()
 {

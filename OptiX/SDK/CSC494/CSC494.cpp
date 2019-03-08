@@ -211,18 +211,25 @@ void CreateScene()
 	gis.push_back(planeInstance);
 
 	// Create rigidbody spheres
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0.0f, 0), 3.0f);
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0.0f, 0.0f, 0.0f), 3.0f);
 	gis.push_back(sphereInstance);
-	RigidBody rigidBody(sphereInstance, make_float3(0, 10.0, 0), 1.0f);
+	RigidBody rigidBody(sphereInstance, make_float3(0.0f, 10.0, 0.0f), 1.0f);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(0.0f, 20.0f, 5.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 5.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	sphereInstance = geometryCreator.CreateSphere(make_float3(0, 0.0f, 0), 3.0f);
+	sphereInstance = geometryCreator.CreateSphere(make_float3(0.0f, 0.0f, 0.0f), 3.0f);
 	gis.push_back(sphereInstance);
-	rigidBody = RigidBody(sphereInstance, make_float3(1.0f, 9.0, 0), 1.0f);
+	rigidBody = RigidBody(sphereInstance, make_float3(1.0f, 9.0, 0.0f), 1.0f);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 20.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	// Create rigidbody box
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-9.0f, 3.0f, 0.0f), make_float3(3.0f, 3.0f, 3.0f));
+	gis.push_back(boxInstance);
+	rigidBody = RigidBody(boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 

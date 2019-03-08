@@ -30,15 +30,21 @@
 
 using namespace optix;
 
+// Rigid body variables (All rigidbodies need this)
 rtDeclareVariable(float3, position, , );
-rtDeclareVariable(float, radius, , );
 
-rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
-rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+// Volumetric variables (All geometry need this)
 rtDeclareVariable(float2, t_values, attribute t_values, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+
+// Sphere specific variables
+rtDeclareVariable(float, radius, , );
+
+// Shading variables (Technically not required, but usually used on all materials)
+rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
 
 template<bool use_robust_method>
@@ -60,11 +66,13 @@ void intersect_sphere(void)
 
 		float root11 = 0.0f;
 
-		if (use_robust_method && fabsf(root1) > 10.f * radius) {
+		if (use_robust_method && fabsf(root1) > 10.f * radius) 
+		{
 			do_refine = true;
 		}
 
-		if (do_refine) {
+		if (do_refine) 
+		{
 			// refine root1
 			float3 O1 = O + root1 * ray.direction;
 			b = dot(O1, D);

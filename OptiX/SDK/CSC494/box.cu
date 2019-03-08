@@ -33,10 +33,17 @@
 
 using namespace optix;
 
-rtDeclareVariable(float3, boxmin, , );
-rtDeclareVariable(float3, boxmax, , );
+// Rigidbody variables
+rtDeclareVariable(float3, position, , );
+rtDeclareVariable(float3, axisLengths, , );
+
+// Volumetric variables (All geometry need this)
+rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
+rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float3, texcoord, attribute texcoord, );
+
+// Shading variables (Technically not required, but usually used on all materials)
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
 
@@ -49,6 +56,9 @@ static __device__ float3 boxnormal(float t, float3 t0, float3 t1)
 
 RT_PROGRAM void box_intersect(int)
 {
+	float3 boxmin = position - (axisLengths / 2.0f);
+	float3 boxmax = position + (axisLengths / 2.0f);
+
 	float3 t0 = (boxmin - ray.origin) / ray.direction;
 	float3 t1 = (boxmax - ray.origin) / ray.direction;
 	float3 near = fminf(t0, t1);
@@ -56,26 +66,29 @@ RT_PROGRAM void box_intersect(int)
 	float tmin = fmaxf(near);
 	float tmax = fminf(far);
 
-	if (tmin <= tmax) {
-		bool check_second = true;
-		if (rtPotentialIntersection(tmin)) {
-			texcoord = make_float3(0.0f);
+	if (tmin <= tmax) 
+	{
+		// Always call the any hit function, so we have to report an intersection closer than 
+		// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
+		// function, make sure we ignore the intersection so it doesn't store this value.
+		bool ignore = tmin > current_closest; 
+		float modified_t_value = ignore ? current_closest - 1.0f : tmin;
+
+		if (rtPotentialIntersection(tmin)) 
+		{
+			ignore_intersection = ignore;
+			t_values = make_float2(tmin, tmax);
 			shading_normal = geometric_normal = boxnormal(tmin, t0, t1);
-			if (rtReportIntersection(0))
-				check_second = false;
-		}
-		if (check_second) {
-			if (rtPotentialIntersection(tmax)) {
-				texcoord = make_float3(0.0f);
-				shading_normal = geometric_normal = boxnormal(tmax, t0, t1);
-				rtReportIntersection(0);
-			}
+			rtReportIntersection(0);
 		}
 	}
 }
 
 RT_PROGRAM void box_bounds(int, float result[6])
 {
+	float3 boxmin = position - (axisLengths / 2.0f);
+	float3 boxmax = position + (axisLengths / 2.0f);
+
 	optix::Aabb* aabb = (optix::Aabb*)result;
 	aabb->set(boxmin, boxmax);
 }
