@@ -230,10 +230,7 @@ void CreateScene()
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
 	rigidBody = RigidBody(context, boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
-	float m[9] ={ cosf(3.14/4.0),sinf(3.14/4.0),0,
-				  -sinf(3.14/4.0),cosf(3.14/4.0),0,
-				   0,0,1};
-	rigidBody.SetRotation(m);
+	rigidBody.SetRotation(make_float4(0.0f, 0.0f, -0.3826834f, 0.9238795f));
 	sceneRigidBodies.push_back(rigidBody);
 
 

@@ -106,17 +106,18 @@ void RigidBody::AddPositionRelative(float3 vector)
 	MarkGroupAsDirty();
 }
 
-void RigidBody::SetRotation(float rotation[9])
+void RigidBody::SetRotation(float4 quaternion)
 {
-	transformMatrix[0] = rotation[0];
-	transformMatrix[1] = rotation[1];
-	transformMatrix[2] = rotation[2];
-	transformMatrix[4] = rotation[3];
-	transformMatrix[5] = rotation[4];
-	transformMatrix[6] = rotation[5];
-	transformMatrix[8] = rotation[6];
-	transformMatrix[9] = rotation[7];
-	transformMatrix[10] = rotation[8];
+	rotation = quaternion;
+	transformMatrix[0] = 1.0f - 2*quaternion.y*quaternion.y - 2*quaternion.z*quaternion.z;
+	transformMatrix[1] = 2*quaternion.x*quaternion.y - 2*quaternion.z*quaternion.w;
+	transformMatrix[2] = 2*quaternion.x*quaternion.z + 2*quaternion.y*quaternion.w;
+	transformMatrix[4] = 2*quaternion.x*quaternion.y + 2*quaternion.z*quaternion.w;
+	transformMatrix[5] = 1.0f - 2*quaternion.x*quaternion.x - 2*quaternion.z*quaternion.z;
+	transformMatrix[6] = 2*quaternion.y*quaternion.z - 2*quaternion.x*quaternion.w;
+	transformMatrix[8] = 2*quaternion.x*quaternion.z - 2*quaternion.y*quaternion.w;
+	transformMatrix[9] = 2*quaternion.y*quaternion.z + 2*quaternion.x*quaternion.w;
+	transformMatrix[10] = 1.0f - 2*quaternion.x*quaternion.x - 2*quaternion.y*quaternion.y;
 	transformNode->setMatrix(false, transformMatrix, NULL);
 	MarkGroupAsDirty();
 }

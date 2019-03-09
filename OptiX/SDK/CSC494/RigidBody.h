@@ -40,6 +40,7 @@ public:
 		// Create transformation node
 		transformNode = context->createTransform();
 		transformNode->setChild(geometryGroup);
+		rotation = make_float4(0, 0, 0, 1);
 		float identity[16] = { 1,0,0,startingPosition.x,
 							   0,1,0,startingPosition.y,
 							   0,0,1,startingPosition.z,
@@ -58,7 +59,7 @@ public:
 	void AddForce(float3 force);
 	void SetPosition(float3 position);
 	void AddPositionRelative(float3 vector);
-	void SetRotation(float rotation[9]);
+	void SetRotation(float4 quaternion);
 	void UseGravity(bool useGravity);
 
 	GeometryGroup GetGeometryGroup();
@@ -89,6 +90,7 @@ private:
 
 	float mass;
 	float bounciness;
+	float4 rotation; // As a quaternion
 	float3 velocity;
 	float3 forceAccumulation;
 
