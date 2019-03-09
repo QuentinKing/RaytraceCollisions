@@ -28,11 +28,8 @@ void RigidBody::EulerStep(float deltaTime)
 	}
 
 	// Update our rigidbody using the discrete derivative step
-	position += positionDeriv;
+	AddPositionRelative(positionDeriv);
 	velocity += velocityDeriv;
-
-	// Update our mesh's position
-	mesh["position"]->setFloat(position);
 
 	// Zero out force accumulation since we've passed it off into the velocity now
 	forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
@@ -49,7 +46,7 @@ void RigidBody::CalculateDerivatives(float3 &positionDeriv, float3 &velocityDeri
 
 bool RigidBody::HandlePlaneCollisions(float3 positionDeriv)
 {
-	float3 newPosition = position + positionDeriv;
+	float3 newPosition = GetPosition() + positionDeriv;
 	bool recalculate = false;
 	for (auto i = planeCollisions.begin(); i != planeCollisions.end(); i++)
 	{
@@ -91,6 +88,39 @@ void RigidBody::AddForce(float3 force)
 	forceAccumulation += force;
 }
 
+void RigidBody::SetPosition(float3 position)
+{
+	transformMatrix[3] = position.x;
+	transformMatrix[7] = position.y;
+	transformMatrix[11] = position.z;
+	transformNode->setMatrix(false, transformMatrix, NULL);
+	MarkGroupAsDirty();
+}
+
+void RigidBody::AddPositionRelative(float3 vector)
+{
+	transformMatrix[3] += vector.x;
+	transformMatrix[7] += vector.y;
+	transformMatrix[11] += vector.z;
+	transformNode->setMatrix(false, transformMatrix, NULL);
+	MarkGroupAsDirty();
+}
+
+void RigidBody::SetRotation(float rotation[9])
+{
+	transformMatrix[0] = rotation[0];
+	transformMatrix[1] = rotation[1];
+	transformMatrix[2] = rotation[2];
+	transformMatrix[4] = rotation[3];
+	transformMatrix[5] = rotation[4];
+	transformMatrix[6] = rotation[5];
+	transformMatrix[8] = rotation[6];
+	transformMatrix[9] = rotation[7];
+	transformMatrix[10] = rotation[8];
+	transformNode->setMatrix(false, transformMatrix, NULL);
+	MarkGroupAsDirty();
+}
+
 void RigidBody::UseGravity(bool useGravity)
 {
 	this->useGravity = useGravity;
@@ -103,7 +133,7 @@ float RigidBody::GetMass()
 
 float3 RigidBody::GetPosition()
 {
-	return position;
+	return make_float3(transformMatrix[3], transformMatrix[7], transformMatrix[11]);
 }
 
 float3 RigidBody::GetVelocity()
@@ -114,4 +144,19 @@ float3 RigidBody::GetVelocity()
 float3 RigidBody::GetForces()
 {
 	return forceAccumulation;
+}
+
+GeometryGroup RigidBody::GetGeometryGroup()
+{
+	return geometryGroup;
+}
+
+Transform RigidBody::GetTransform()
+{
+	return transformNode;
+}
+
+void RigidBody::MarkGroupAsDirty()
+{
+	geometryGroup->getAcceleration()->markDirty();
 }

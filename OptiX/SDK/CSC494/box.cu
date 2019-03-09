@@ -34,7 +34,6 @@
 using namespace optix;
 
 // Rigidbody variables
-rtDeclareVariable(float3, position, , );
 rtDeclareVariable(float3, axisLengths, , );
 
 // Volumetric variables (All geometry need this)
@@ -56,8 +55,8 @@ static __device__ float3 boxnormal(float t, float3 t0, float3 t1)
 
 RT_PROGRAM void box_intersect(int)
 {
-	float3 boxmin = position - (axisLengths / 2.0f);
-	float3 boxmax = position + (axisLengths / 2.0f);
+	float3 boxmin = -(axisLengths / 2.0f);
+	float3 boxmax = (axisLengths / 2.0f);
 
 	float3 t0 = (boxmin - ray.origin) / ray.direction;
 	float3 t1 = (boxmax - ray.origin) / ray.direction;
@@ -86,8 +85,8 @@ RT_PROGRAM void box_intersect(int)
 
 RT_PROGRAM void box_bounds(int, float result[6])
 {
-	float3 boxmin = position - (axisLengths / 2.0f);
-	float3 boxmax = position + (axisLengths / 2.0f);
+	float3 boxmin = -(axisLengths / 2.0f);
+	float3 boxmax = (axisLengths / 2.0f);
 
 	optix::Aabb* aabb = (optix::Aabb*)result;
 	aabb->set(boxmin, boxmax);

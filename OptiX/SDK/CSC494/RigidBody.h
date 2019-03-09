@@ -24,23 +24,45 @@ struct PlaneData
 class RigidBody
 {
 public:
-	RigidBody(GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
+	RigidBody(Context context, GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
+		context(context),
 		mesh(mesh),
-		position(startingPosition),
 		mass(mass),
 		useGravity(useGravity),
 		bounciness(bounciness)
 	{
+		// Create geometry group
+		geometryGroup = context->createGeometryGroup();
+		geometryGroup->setChildCount(1);
+		geometryGroup->setChild(0, mesh);
+		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
+
+		// Create transformation node
+		transformNode = context->createTransform();
+		transformNode->setChild(geometryGroup);
+		float identity[16] = { 1,0,0,startingPosition.x,
+							   0,1,0,startingPosition.y,
+							   0,0,1,startingPosition.z,
+							   0,0,0,1 };
+		std::copy(identity, identity + 16, transformMatrix);
+		transformNode->setMatrix(false, transformMatrix, NULL);
+		MarkGroupAsDirty();
+
 		velocity = make_float3(0.0f, 0.0f, 0.0f);
 		forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
-		mesh["position"]->setFloat(startingPosition);
 	};
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
 	void RegisterPlane(float3 point, float3 normal);
 	void AddForce(float3 force);
+	void SetPosition(float3 position);
+	void AddPositionRelative(float3 vector);
+	void SetRotation(float rotation[9]);
 	void UseGravity(bool useGravity);
+
+	GeometryGroup GetGeometryGroup();
+	Transform GetTransform();
 
 	float GetMass();
 	float3 GetPosition();
@@ -50,10 +72,16 @@ public:
 private:
 	void ApplyGravity();
 	void ApplyDrag();
+	void MarkGroupAsDirty();
 	bool HandlePlaneCollisions(float3 positionDeriv);
 	void CalculateDerivatives(float3 &positionDeriv, float3 &velocityDeriv, float deltaTime);
 
+	Context context;
+	Transform transformNode;
+	GeometryGroup geometryGroup;
 	GeometryInstance mesh;
+
+	float transformMatrix[16];
 
 	// TODO: Set based on geometry
 	float kDrag = 0.1f; // Coefficient of drag
@@ -61,7 +89,6 @@ private:
 
 	float mass;
 	float bounciness;
-	float3 position;
 	float3 velocity;
 	float3 forceAccumulation;
 

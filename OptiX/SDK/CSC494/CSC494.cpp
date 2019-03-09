@@ -201,8 +201,9 @@ void CreateScene()
 {
 	GeometryCreator geometryCreator(context, PROJECT_NAME, SCENE_NAME);
 
-	// Geomtery Instance -> coupling geometry and materials together
-	std::vector<GeometryInstance> gis;
+	// All non-rigidbody geometry
+	std::vector<GeometryInstance> staticGeometry;
+	GeometryGroup staticGroup = context->createGeometryGroup();
 
 	// Create root scene group
 	Group sceneGroup = context->createGroup();
@@ -211,55 +212,46 @@ void CreateScene()
 	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.0f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
 		make_float3(0.0f, 0.0f, 128.0f));
-	gis.push_back(planeInstance);
+	staticGeometry.push_back(planeInstance);
 
 	// Create rigidbody spheres
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(make_float3(0.0f, 0.0f, 0.0f), 3.0f);
-	gis.push_back(sphereInstance);
-	RigidBody rigidBody(sphereInstance, make_float3(0.0f, 10.0, 0.0f), 1.0f);
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
+	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 10.0, 0.0f), 1.0f);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 5.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	sphereInstance = geometryCreator.CreateSphere(make_float3(0.0f, 0.0f, 0.0f), 3.0f);
-	gis.push_back(sphereInstance);
-	rigidBody = RigidBody(sphereInstance, make_float3(1.0f, 9.0, 0.0f), 1.0f);
+	sphereInstance = geometryCreator.CreateSphere(3.0f);
+	rigidBody = RigidBody(context, sphereInstance, make_float3(1.0f, 9.0, 0.0f), 1.0f);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 20.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	// Create rigidbody box
-	GeometryGroup boxGroup = context->createGeometryGroup();
-	boxGroup->setChildCount(1);
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(-9.0f, 3.0f, 0.0f), make_float3(3.0f, 3.0f, 3.0f));
-	rigidBody = RigidBody(boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
+	rigidBody = RigidBody(context, boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
+	float m[9] ={ cosf(3.14/4.0),sinf(3.14/4.0),0,
+				  -sinf(3.14/4.0),cosf(3.14/4.0),0,
+				   0,0,1};
+	rigidBody.SetRotation(m);
 	sceneRigidBodies.push_back(rigidBody);
-	boxGroup->setChild(0, boxInstance);
-	boxGroup->setAcceleration(context->createAcceleration("NoAccel"));
-	Transform boxTransform = context->createTransform();
-	float m[16] ={ cosf(3.14/4.0),sinf(3.14/4.0),0,0,
-				  -sinf(3.14/4.0),cosf(3.14/4.0),0,0,
-				   0,0,1,0,
-				   0,0,0,1 };
-    boxTransform->setMatrix( false, m, NULL );
-	boxTransform->setChild(boxGroup);
-	boxGroup->getAcceleration()->markDirty();
 
 
-	// Geometry group -> coupling some number of instances with an acceleration structure
-	GeometryGroup geometrygroup = context->createGeometryGroup();
-	geometrygroup->setChildCount(static_cast<unsigned int>(gis.size()));
-	for (uint i = 0; i < gis.size(); i++)
+	// Create static geometry group
+	staticGroup->setChildCount(static_cast<unsigned int>(staticGeometry.size()));
+	for (uint i = 0; i < staticGeometry.size(); i++)
 	{
-		geometrygroup->setChild(i, gis[i]);
+		staticGroup->setChild(i, staticGeometry[i]);
 	}
-	geometrygroup->setAcceleration(context->createAcceleration("NoAccel"));
+	staticGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	// Set up scene group
-	sceneGroup->setChildCount(2);
-	sceneGroup->setChild(0, geometrygroup);
-	sceneGroup->setChild(1, boxTransform);
+	sceneGroup->setChildCount(sceneRigidBodies.size() + 1); // +1 for static geometry
+	for (uint i = 0; i < sceneRigidBodies.size(); i++)
+	{
+		sceneGroup->setChild(i, sceneRigidBodies[i].GetTransform());
+	}
+	sceneGroup->setChild(sceneRigidBodies.size(), staticGroup);
 	sceneGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(sceneGroup);

@@ -8,12 +8,11 @@
 
 using namespace optix;
 
-GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
+GeometryInstance GeometryCreator::CreateSphere(float radius)
 {
 	// Create geometry and transform
 	Geometry sphere = context->createGeometry();
 	sphere->setPrimitiveCount(1u);
-	float4 sphereData = make_float4(position, radius);
 
 	// Create programs
 	const char* ptx = sutil::getPtxString(projectPrefix, "sphere_model.cu");
@@ -21,8 +20,7 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 	Program sphere_intersect = context->createProgramFromPTXString(ptx, "robust_intersect");
 	sphere->setBoundingBoxProgram(sphere_bounds);
 	sphere->setIntersectionProgram(sphere_intersect);
-	sphere["position"]->setFloat(make_float3(sphereData));
-	sphere["radius"]->setFloat(sphereData.w);
+	sphere["radius"]->setFloat(radius);
 
 	// Create material
 	Material sphere_matl = context->createMaterial();
@@ -43,6 +41,41 @@ GeometryInstance GeometryCreator::CreateSphere(float3 position, float radius)
 
 	// Create Instance
 	return context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1); // + 1 designates how many materials we are using
+}
+
+GeometryInstance GeometryCreator::CreateBox(float3 axisLengths)
+{
+	// Create geometry
+	Geometry box = context->createGeometry();
+	box->setPrimitiveCount(1u);
+
+	// Create programs
+	const char *ptx = sutil::getPtxString(projectPrefix, "box.cu");
+	Program box_bounds = context->createProgramFromPTXString(ptx, "box_bounds");
+	Program box_intersect = context->createProgramFromPTXString(ptx, "box_intersect");
+
+	box->setBoundingBoxProgram(box_bounds);
+	box->setIntersectionProgram(box_intersect);
+	box["axisLengths"]->setFloat(axisLengths);
+
+	// Create Material
+	Material box_matl = context->createMaterial();
+	Program box_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_box");
+	Program box_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
+	box_matl->setClosestHitProgram(0, box_ch);
+	box_matl->setAnyHitProgram(0, box_ah);
+
+	// Shadow caster program
+	Program box_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
+	box_matl->setAnyHitProgram(1, box_shadow);
+
+	// Hardcode in some material properties for now (color, etc..)
+	box_matl["ambientColorIntensity"]->setFloat( 0.1f, 0.1f, 0.1f );
+    box_matl["diffuseColorIntensity"]->setFloat( 0.8f, 0.2f, 0.8f );
+	box_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
+	box_matl["specularPower"]->setFloat( 88.0f );
+
+	return context->createGeometryInstance(box, &box_matl, &box_matl + 1);
 }
 
 GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v2)
@@ -81,40 +114,4 @@ GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v
 	plane_matl["specularPower"]->setFloat( 1.0f );
 
 	return context->createGeometryInstance(parallelogram, &plane_matl, &plane_matl + 1);
-}
-
-GeometryInstance GeometryCreator::CreateBox(float3 position, float3 axisLengths)
-{
-	// Create geometry
-	Geometry box = context->createGeometry();
-	box->setPrimitiveCount(1u);
-
-	// Create programs
-	const char *ptx = sutil::getPtxString(projectPrefix, "box.cu");
-	Program box_bounds = context->createProgramFromPTXString(ptx, "box_bounds");
-	Program box_intersect = context->createProgramFromPTXString(ptx, "box_intersect");
-
-	box->setBoundingBoxProgram(box_bounds);
-	box->setIntersectionProgram(box_intersect);
-	box["position"]->setFloat(position);
-	box["axisLengths"]->setFloat(axisLengths);
-
-	// Create Material
-	Material box_matl = context->createMaterial();
-	Program box_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_box");
-	Program box_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
-	box_matl->setClosestHitProgram(0, box_ch);
-	box_matl->setAnyHitProgram(0, box_ah);
-
-	// Shadow caster program
-	Program box_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
-	box_matl->setAnyHitProgram(1, box_shadow);
-
-	// Hardcode in some material properties for now (color, etc..)
-	box_matl["ambientColorIntensity"]->setFloat( 0.1f, 0.1f, 0.1f );
-    box_matl["diffuseColorIntensity"]->setFloat( 0.8f, 0.2f, 0.8f );
-	box_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
-	box_matl["specularPower"]->setFloat( 88.0f );
-
-	return context->createGeometryInstance(box, &box_matl, &box_matl + 1);
 }

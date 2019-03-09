@@ -21,9 +21,11 @@ public:
 	};
 	~GeometryCreator() {};
 
-	GeometryInstance CreateSphere(float3 position, float radius);
+	GeometryInstance CreateSphere(float radius);
+	GeometryInstance CreateBox(float3 axisLengths);
+
 	GeometryInstance CreatePlane(float3 anchor, float3 v1, float3 v2);
-	GeometryInstance CreateBox(float3 boxMin, float3 boxMax);
+
 
 private:
 	Context context;
