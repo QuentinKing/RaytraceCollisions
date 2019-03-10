@@ -332,5 +332,4 @@ ASALocalRun/
 # SDK
 OptiX/bin64/
 OptiX/doc/
-OptiX/include/
 OptiX/lib64/
