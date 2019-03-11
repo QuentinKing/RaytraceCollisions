@@ -216,21 +216,22 @@ void CreateScene()
 
 	// Create rigidbody spheres
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
-	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 10.0, 0.0f), 1.0f);
+	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 0.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 5.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, make_float3(1.0f, 9.0, 0.0f), 1.0f);
+	rigidBody = RigidBody(context, sphereInstance, make_float3(1.0f, 4.0, 0.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(0.0f, 20.0f, 0.0f));
+	rigidBody.AddForce(make_float3(2.0f, 10.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
 	rigidBody = RigidBody(context, boxInstance, make_float3(-9.0f, 3.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
-	rigidBody.SetRotation(make_float4(0.0f, 0.0f, -0.3826834f, 0.9238795f));
+	rigidBody.AddTorque(make_float3(1.0f, 1.0f, 0.0f));
+	//rigidBody.SetRotation(make_float4(0.0f, 0.0f, -0.3826834f, 0.9238795f));
 	sceneRigidBodies.push_back(rigidBody);
 
 
@@ -286,9 +287,11 @@ void SetupCamera()
 
 void UpdateGeometry()
 {
+	float updateTime = sutil::currentTime() - last_update_time;
+	float deltaTime = std::fmin(updateTime, 0.1f); // For numerical stability
 	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
 	{
-		i->EulerStep(sutil::currentTime()-last_update_time);
+		i->EulerStep(deltaTime);
 	}
 
 	last_update_time = sutil::currentTime();

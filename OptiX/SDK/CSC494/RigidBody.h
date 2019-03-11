@@ -27,7 +27,6 @@ public:
 	RigidBody(Context context, GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
 		context(context),
 		mesh(mesh),
-		mass(mass),
 		useGravity(useGravity),
 		bounciness(bounciness)
 	{
@@ -37,45 +36,52 @@ public:
 		geometryGroup->setChild(0, mesh);
 		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
+		// Init state
+		_mass = mass;
+		_inertiaBody = make_matrix3x3(Matrix4x4::identity());
+		_inertiaBodyInv = _inertiaBody.mat3inverse();
+
+		_position = startingPosition;
+		_rotation = make_matrix3x3(Matrix4x4::identity());
+		_linearMomentum = make_float3(0.0f, 0.0f, 0.0f);
+		_angularMomentum = make_float3(0.0f, 0.0f, 0.0f);
+
+		CalculateAuxiliaryVariables();
+
+		_force = make_float3(0.0f, 0.0f, 0.0f);
+		_torque = make_float3(0.0f, 0.0f, 0.0f);
+
 		// Create transformation node
 		transformNode = context->createTransform();
 		transformNode->setChild(geometryGroup);
-		rotation = make_float4(0, 0, 0, 1);
 		float identity[16] = { 1,0,0,startingPosition.x,
 							   0,1,0,startingPosition.y,
 							   0,0,1,startingPosition.z,
 							   0,0,0,1 };
 		std::copy(identity, identity + 16, transformMatrix);
 		transformNode->setMatrix(false, transformMatrix, NULL);
-		MarkGroupAsDirty();
 
-		velocity = make_float3(0.0f, 0.0f, 0.0f);
-		forceAccumulation = make_float3(0.0f, 0.0f, 0.0f);
+		MarkGroupAsDirty();
 	};
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
 	void RegisterPlane(float3 point, float3 normal);
 	void AddForce(float3 force);
-	void SetPosition(float3 position);
-	void AddPositionRelative(float3 vector);
+	void AddTorque(float3 torque);
 	void SetRotation(float4 quaternion);
 	void UseGravity(bool useGravity);
 
 	GeometryGroup GetGeometryGroup();
 	Transform GetTransform();
 
-	float GetMass();
-	float3 GetPosition();
-	float3 GetVelocity();
-	float3 GetForces();
-
 private:
-	void ApplyGravity();
-	void ApplyDrag();
 	void MarkGroupAsDirty();
 	bool HandlePlaneCollisions(float3 positionDeriv);
-	void CalculateDerivatives(float3 &positionDeriv, float3 &velocityDeriv, float deltaTime);
+	void CalculateAuxiliaryVariables();
+	void ODE(float deltaTime);
+	Matrix3x3 Star(float3 vector);
+	void UpdateTransformNode();
 
 	Context context;
 	Transform transformNode;
@@ -88,11 +94,27 @@ private:
 	float kDrag = 0.1f; // Coefficient of drag
 	bool useGravity;
 
-	float mass;
 	float bounciness;
-	float4 rotation; // As a quaternion
-	float3 velocity;
-	float3 forceAccumulation;
+
+	// Rigidbody dynamics
+	double _mass;
+	Matrix3x3 _inertiaBody;
+	Matrix3x3 _inertiaBodyInv;
+
+	// State space variable
+	float3 _position;
+	Matrix3x3 _rotation;
+	float3 _linearMomentum;
+	float3 _angularMomentum;
+
+	// Derived members
+	Matrix3x3 _inertiaInv;
+	float3 _velocity;
+	float3 _spinVector;
+
+	// Computed quantities
+	float3 _force;
+	float3 _torque;
 
 	std::vector<PlaneData> planeCollisions;
 };
