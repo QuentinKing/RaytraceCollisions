@@ -42,6 +42,7 @@ public:
 		_inertiaBodyInv = _inertiaBody.mat3inverse();
 
 		_position = startingPosition;
+		_quaternion = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
 		_rotation = make_matrix3x3(Matrix4x4::identity());
 		_linearMomentum = make_float3(0.0f, 0.0f, 0.0f);
 		_angularMomentum = make_float3(0.0f, 0.0f, 0.0f);
@@ -69,7 +70,6 @@ public:
 	void RegisterPlane(float3 point, float3 normal);
 	void AddForce(float3 force);
 	void AddTorque(float3 torque);
-	void SetRotation(float4 quaternion);
 	void UseGravity(bool useGravity);
 
 	GeometryGroup GetGeometryGroup();
@@ -82,6 +82,9 @@ private:
 	void ODE(float deltaTime);
 	Matrix3x3 Star(float3 vector);
 	void UpdateTransformNode();
+
+	Matrix3x3 QuaternionToRotation(float4 quaternion);
+	float4 RotationToQuaternion(Matrix3x3 rotation);
 
 	Context context;
 	Transform transformNode;
@@ -103,6 +106,7 @@ private:
 
 	// State space variable
 	float3 _position;
+	float4 _quaternion;
 	Matrix3x3 _rotation;
 	float3 _linearMomentum;
 	float3 _angularMomentum;
