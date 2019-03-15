@@ -42,8 +42,7 @@ public:
 		_inertiaBodyInv = _inertiaBody.mat3inverse();
 
 		_position = startingPosition;
-		_quaternion = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
-		_rotation = make_matrix3x3(Matrix4x4::identity());
+		_quaternion = make_float4(1.0f, 0.0f, 0.0f, 0.0f);
 		_linearMomentum = make_float3(0.0f, 0.0f, 0.0f);
 		_angularMomentum = make_float3(0.0f, 0.0f, 0.0f);
 
@@ -77,7 +76,6 @@ public:
 
 private:
 	void MarkGroupAsDirty();
-	bool HandlePlaneCollisions(float3 positionDeriv);
 	void CalculateAuxiliaryVariables();
 	void ODE(float deltaTime);
 	Matrix3x3 Star(float3 vector);
@@ -86,6 +84,7 @@ private:
 	Matrix3x3 QuaternionToRotation(float4 quaternion);
 	float4 RotationToQuaternion(Matrix3x3 rotation);
 
+	// Optix variable
 	Context context;
 	Transform transformNode;
 	GeometryGroup geometryGroup;
@@ -107,7 +106,6 @@ private:
 	// State space variable
 	float3 _position;
 	float4 _quaternion;
-	Matrix3x3 _rotation;
 	float3 _linearMomentum;
 	float3 _angularMomentum;
 
@@ -120,5 +118,7 @@ private:
 	float3 _force;
 	float3 _torque;
 
+	// Testing
+	bool HandlePlaneCollisions(float3 positionDeriv);
 	std::vector<PlaneData> planeCollisions;
 };
