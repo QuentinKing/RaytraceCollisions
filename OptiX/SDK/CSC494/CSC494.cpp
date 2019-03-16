@@ -82,23 +82,25 @@ int        mouse_button;
 //
 //------------------------------------------------------------------------------
 
-Buffer getOutputBuffer();
-void destroyContext();
-void registerExitHandler();
+Buffer GetOutputBuffer();
+Buffer GetVolumeBuffer();
+
+void DestroyContext();
+void RegisterExitHandler();
 void CreateContext();
 void CreateScene();
 void CreateLights();
 void SetupCamera();
 void UpdateGeometry();
 void UpdateCamera();
-void glutInitialize(int* argc, char** argv);
-void glutRun();
+void GlutInitialize(int* argc, char** argv);
+void GlutRun();
 
-void glutDisplay();
-void glutKeyboardPress(unsigned char k, int x, int y);
-void glutMousePress(int button, int state, int x, int y);
-void glutMouseMotion(int x, int y);
-void glutResize(int w, int h);
+void GlutDisplay();
+void GlutKeyboardPress(unsigned char k, int x, int y);
+void GlutMousePress(int button, int state, int x, int y);
+void GlutMouseMotion(int x, int y);
+void GlutResize(int w, int h);
 
 
 //------------------------------------------------------------------------------
@@ -107,7 +109,7 @@ void glutResize(int w, int h);
 //
 //------------------------------------------------------------------------------
 
-Buffer getOutputBuffer()
+Buffer GetOutputBuffer()
 {
 	return context["output_buffer"]->getBuffer();
 }
@@ -117,7 +119,7 @@ Buffer GetVolumeBuffer()
 	return context["volume_buffer"]->getBuffer();
 }
 
-void destroyContext()
+void DestroyContext()
 {
 	if (context)
 	{
@@ -127,11 +129,11 @@ void destroyContext()
 }
 
 
-void registerExitHandler()
+void RegisterExitHandler()
 {
 	// register shutdown handler
 #ifdef _WIN32
-	glutCloseFunc(destroyContext);  // this function is freeglut-only
+	glutCloseFunc(DestroyContext);  // this function is freeglut-only
 #else
 	atexit(destroyContext);
 #endif
@@ -166,7 +168,7 @@ void CreateContext()
 	Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
 	context["output_buffer"]->set(buffer);
 
-	Buffer volume_buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
+	Buffer volume_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height);
 	context["volume_buffer"]->set(volume_buffer);
 
 	// Determine what type of camera we are using
@@ -336,7 +338,7 @@ void UpdateCamera()
 }
 
 
-void glutInitialize(int* argc, char** argv)
+void GlutInitialize(int* argc, char** argv)
 {
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE);
@@ -347,7 +349,7 @@ void glutInitialize(int* argc, char** argv)
 }
 
 
-void glutRun()
+void GlutRun()
 {
 	// Initialize GL state
 	glMatrixMode(GL_PROJECTION);
@@ -363,14 +365,14 @@ void glutRun()
 	glutReshapeWindow(width, height);
 
 	// GLUT callbacks
-	glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutDisplay);
-	glutReshapeFunc(glutResize);
-	glutKeyboardFunc(glutKeyboardPress);
-	glutMouseFunc(glutMousePress);
-	glutMotionFunc(glutMouseMotion);
+	glutDisplayFunc(GlutDisplay);
+	glutIdleFunc(GlutDisplay);
+	glutReshapeFunc(GlutResize);
+	glutKeyboardFunc(GlutKeyboardPress);
+	glutMouseFunc(GlutMousePress);
+	glutMotionFunc(GlutMouseMotion);
 
-	registerExitHandler();
+	RegisterExitHandler();
 
 	glutMainLoop();
 }
@@ -382,38 +384,60 @@ void glutRun()
 //
 //------------------------------------------------------------------------------
 
-void glutDisplay()
+void GlutDisplay()
 {
 	UpdateGeometry();
 	UpdateCamera();
 
 	context->launch(0, width, height);
 
-	Buffer renderBuffer;
+	Buffer renderBuffer = GetOutputBuffer();
+	Buffer volumeBuffer = GetVolumeBuffer();
 	switch (curRenderBuffer)
 	{
 	case RenderBuffer::ShadedOutput:
-		renderBuffer = getOutputBuffer();
 		sutil::displayBufferGL(renderBuffer);
 		break;
 	case RenderBuffer::IntersectionVolume:
-		renderBuffer = GetVolumeBuffer();
-		sutil::displayBufferGL(renderBuffer);
+		sutil::displayBufferGL(volumeBuffer);
 		break;
 	}
 
+	// Report intersection "volume"
 	float volume = 0.0f;
+	RTsize width, height;
+	volumeBuffer->getSize(width, height);
+	void* data = volumeBuffer->map();
+	char* volumeData = (char*)data;
+
+	for(uint i = 0; i < width*height*4; i+=4)
+	{
+		volume += volumeData[i+2];
+	}
+	volumeBuffer->unmap();
+
+	// Display intersection volume
 	char volumeText[64];
 	snprintf(volumeText, sizeof volumeText, "%f", volume);
 	sutil::displayText(volumeText, 25, height-25);
 
+	// Display collision detection
+	if (volume > 0.0f)
+	{
+		char* collisionText = "Rigidbody collision detected!";
+		sutil::displayText(collisionText, 25, height-55);
+	}
+
+	// Display frames per second
 	sutil::displayFps(frame_count++);
 
 	glutSwapBuffers();
+
+	// Resolve collisions
 }
 
 
-void glutKeyboardPress(unsigned char k, int x, int y)
+void GlutKeyboardPress(unsigned char k, int x, int y)
 {
 
 	switch (k)
@@ -421,14 +445,14 @@ void glutKeyboardPress(unsigned char k, int x, int y)
 		case('q'):
 		case(27): // ESC
 		{
-			destroyContext();
+			DestroyContext();
 			exit(0);
 		}
 		case('s'):
 		{
 			const std::string outputImage = std::string(PROJECT_NAME) + ".ppm";
 			std::cerr << "Saving current frame to '" << outputImage << "'\n";
-			sutil::displayBufferPPM(outputImage.c_str(), getOutputBuffer());
+			sutil::displayBufferPPM(outputImage.c_str(), GetOutputBuffer());
 			break;
 		}
 		case('v'):
@@ -445,7 +469,7 @@ void glutKeyboardPress(unsigned char k, int x, int y)
 }
 
 
-void glutMousePress(int button, int state, int x, int y)
+void GlutMousePress(int button, int state, int x, int y)
 {
 	if (state == GLUT_DOWN)
 	{
@@ -459,7 +483,7 @@ void glutMousePress(int button, int state, int x, int y)
 }
 
 
-void glutMouseMotion(int x, int y)
+void GlutMouseMotion(int x, int y)
 {
 	if (mouse_button == GLUT_RIGHT_BUTTON)
 	{
@@ -488,7 +512,7 @@ void glutMouseMotion(int x, int y)
 }
 
 
-void glutResize(int w, int h)
+void GlutResize(int w, int h)
 {
 	if (w == (int)width && h == (int)height) return;
 
@@ -496,7 +520,7 @@ void glutResize(int w, int h)
 	height = h;
 	sutil::ensureMinimumSize(width, height);
 
-	sutil::resizeBuffer(getOutputBuffer(), width, height);
+	sutil::resizeBuffer(GetOutputBuffer(), width, height);
 
 	glViewport(0, 0, width, height);
 
@@ -575,7 +599,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		glutInitialize(&argc, argv);
+		GlutInitialize(&argc, argv);
 
 #ifndef __APPLE__
 		glewInit();
@@ -592,14 +616,14 @@ int main(int argc, char** argv)
 
 		if (out_file.empty())
 		{
-			glutRun();
+			GlutRun();
 		}
 		else
 		{
 			UpdateCamera();
 			context->launch(0, width, height);
-			sutil::displayBufferPPM(out_file.c_str(), getOutputBuffer());
-			destroyContext();
+			sutil::displayBufferPPM(out_file.c_str(), GetOutputBuffer());
+			DestroyContext();
 		}
 		return 0;
 	}

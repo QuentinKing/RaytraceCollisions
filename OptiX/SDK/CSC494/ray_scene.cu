@@ -71,7 +71,6 @@ rtDeclareVariable(float3, diffuseColorIntensity, , );
 rtDeclareVariable(float3, specularColorIntensity, , );
 rtDeclareVariable(float,   specularPower, , );
 
-
 // Scene values
 rtDeclareVariable(float3, bg_color, , );
 
@@ -102,7 +101,7 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 			}
 		}
 	}
-	volume_buffer[launch_index] = prd.numIntersections > 0 ? make_color(make_float3(0.1, 0.1, 0.1)) : make_color(make_float3(0, 0, 0));
+	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	return false;
 }
 
