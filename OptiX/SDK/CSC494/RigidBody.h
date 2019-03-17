@@ -27,6 +27,7 @@ public:
 	RigidBody(Context context, GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
 		context(context),
 		mesh(mesh),
+		mass(mass),
 		useGravity(useGravity),
 		bounciness(bounciness)
 	{
@@ -37,7 +38,6 @@ public:
 		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 		// Init state
-		mass = mass;
 		inertiaBody = make_matrix3x3(Matrix4x4::identity());
 		inertiaBodyInv = inertiaBody.mat3inverse();
 

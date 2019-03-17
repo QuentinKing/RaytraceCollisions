@@ -105,12 +105,12 @@ void RigidBody::UpdateTransformNode()
 
 void RigidBody::AddForce(float3 force)
 {
-	force += force;
+	this->force += force;
 }
 
 void RigidBody::AddTorque(float3 torque)
 {
-	torque += torque;
+	this->torque += torque;
 }
 
 void RigidBody::UseGravity(bool useGravity)

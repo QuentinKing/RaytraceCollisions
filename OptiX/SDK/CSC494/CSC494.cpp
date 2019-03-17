@@ -227,15 +227,15 @@ void CreateScene()
 
 	// Create rigidbody spheres
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
-	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.1, 0.0f), 1.0f, false);
+	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 0.0f), 1.0f, false);
+	rigidBody = RigidBody(context, sphereInstance, make_float3(0.0f, 4.0, -4.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
