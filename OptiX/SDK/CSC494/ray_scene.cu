@@ -85,17 +85,18 @@ rtDeclareVariable(float3, bg_color, , );
 bool CheckIntersectionOverlap(PerRayData_radiance prd)
 {
 	float2 screen = make_float2(output_buffer.size());
-	float2 pixelSize = orthoCameraSize / screen;
+	float2 pixelSize = orthoCameraSize * 2.0 / screen;
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
 		float2 firstInterval = prd.intersections[i];
 		for (int j = i + 1; j < prd.numIntersections; j++)
 		{
 			float2 secondInterval = prd.intersections[j];
-			if (firstInterval.x <= secondInterval.y && secondInterval.x <= firstInterval.y)
+			if (firstInterval.x <= secondInterval.y && firstInterval.y >= secondInterval.x)
 			{
 				// Compute intersection volume and save it to our buffer
-				float volume = (firstInterval.y - secondInterval.x) * pixelSize.x * pixelSize.y;
+				float intersection = min(abs(firstInterval.y - secondInterval.x), abs(secondInterval.y - firstInterval.x));
+				float volume = intersection * pixelSize.x * pixelSize.y;
 				float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
 				volume_visual_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
 				volume_buffer[launch_index] = volume;
@@ -153,7 +154,7 @@ RT_PROGRAM void orthographic_camera()
 	size_t2 screen = output_buffer.size();
 
 	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
-	float3 ray_origin = eye + d.x*U*orthoCameraSize.x + d.y*V*orthoCameraSize.y;
+	float3 ray_origin = eye + d.x*normalize(U)*orthoCameraSize.x + d.y*normalize(V)*orthoCameraSize.y;
 	float3 ray_direction = normalize(W);
 
 	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
@@ -203,6 +204,7 @@ RT_PROGRAM void any_hit()
 	// Record our intersection values
 	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
 	{
+
 		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
 		prd_radiance.numIntersections++;
 
