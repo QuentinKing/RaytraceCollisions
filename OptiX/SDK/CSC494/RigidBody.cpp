@@ -19,10 +19,10 @@ void RigidBody::EulerStep(float deltaTime)
 */
 void RigidBody::CalculateAuxiliaryVariables()
 {
-	Matrix3x3 rotation = QuaternionToRotation(_quaternion);
-	_velocity = _linearMomentum / _mass;
-	_inertiaInv = rotation * _inertiaBodyInv * rotation.transpose();
-	_spinVector = _inertiaInv * _angularMomentum;
+	Matrix3x3 rotation = QuaternionToRotation(quaternion);
+	velocity = linearMomentum / mass;
+	inertiaInv = rotation * inertiaBodyInv * rotation.transpose();
+	spinVector = inertiaInv * angularMomentum;
 }
 
 /*
@@ -40,13 +40,13 @@ void RigidBody::ODE(float deltaTime)
 	*/
 
 	// Calculate derivative of the state space
-	float3 positionDot = _velocity * deltaTime;
-	float3 linearMomentumDot = _force * deltaTime;
-	float3 angularMomentumDot = _torque * deltaTime;
+	float3 positionDot = velocity * deltaTime;
+	float3 linearMomentumDot = force * deltaTime;
+	float3 angularMomentumDot = torque * deltaTime;
 
-	float3 quaternionV = make_float3(_quaternion.y, _quaternion.z, _quaternion.w);
-	float quaternionDotS = -dot(quaternionV, _spinVector);
-	float3 quaternionDotV = _quaternion.x * _spinVector + cross(_spinVector, quaternionV);
+	float3 quaternionV = make_float3(quaternion.y, quaternion.z, quaternion.w);
+	float quaternionDotS = -dot(quaternionV, spinVector);
+	float3 quaternionDotV = quaternion.x * spinVector + cross(spinVector, quaternionV);
 	float4 quaternionDot = 0.5 * make_float4(quaternionDotS, quaternionDotV.x, quaternionDotV.y, quaternionDotV.z);
 
 	// Handle plane collisions
@@ -61,11 +61,11 @@ void RigidBody::ODE(float deltaTime)
 	*/
 
 	// Update rigidbody
-	_position += positionDot;
-	_quaternion += quaternionDot;
-	_quaternion = normalize(_quaternion);
-	_linearMomentum += linearMomentumDot;
-	_angularMomentum += angularMomentumDot;
+	position += positionDot;
+	quaternion += quaternionDot;
+	quaternion = normalize(quaternion);
+	linearMomentum += linearMomentumDot;
+	angularMomentum += angularMomentumDot;
 
 	// Pass off new trasnform to optix
 	UpdateTransformNode();
@@ -74,8 +74,8 @@ void RigidBody::ODE(float deltaTime)
 	CalculateAuxiliaryVariables();
 
 	// Zero out force vectors
-	_force = make_float3(0.0f, 0.0f, 0.0f);
-	_torque = make_float3(0.0f, 0.0f, 0.0f);
+	force = make_float3(0.0f, 0.0f, 0.0f);
+	torque = make_float3(0.0f, 0.0f, 0.0f);
 }
 
 /*
@@ -92,10 +92,10 @@ Matrix3x3 RigidBody::Star(float3 vector)
 */
 void RigidBody::UpdateTransformNode()
 {
-	Matrix3x3 rotation = QuaternionToRotation(_quaternion);
-	float temp[16] = {rotation[0],rotation[1],rotation[2],_position.x,
-					  rotation[3],rotation[4],rotation[5],_position.y,
-					  rotation[6],rotation[7],rotation[8],_position.z,
+	Matrix3x3 rotation = QuaternionToRotation(quaternion);
+	float temp[16] = {rotation[0],rotation[1],rotation[2],position.x,
+					  rotation[3],rotation[4],rotation[5],position.y,
+					  rotation[6],rotation[7],rotation[8],position.z,
 					  0,0,0,1};
 	Matrix4x4 newTransform(temp);
 	transformNode->setMatrix(false, temp, NULL);
@@ -105,12 +105,12 @@ void RigidBody::UpdateTransformNode()
 
 void RigidBody::AddForce(float3 force)
 {
-	_force += force;
+	force += force;
 }
 
 void RigidBody::AddTorque(float3 torque)
 {
-	_torque += torque;
+	torque += torque;
 }
 
 void RigidBody::UseGravity(bool useGravity)
@@ -212,7 +212,7 @@ float4 RigidBody::RotationToQuaternion(Matrix3x3 rotation)
 // TODO: Delete this. just testing out some physic responses
 bool RigidBody::HandlePlaneCollisions(float3 positionDot)
 {
-	float3 newPosition = _position + positionDot;
+	float3 newPosition = position + positionDot;
 	bool recalculate = false;
 	for (auto i = planeCollisions.begin(); i != planeCollisions.end(); i++)
 	{
@@ -224,10 +224,10 @@ bool RigidBody::HandlePlaneCollisions(float3 positionDot)
 		{
 			recalculate = true;
 
-			float3 vn = dot(i->normal, _velocity) * i->normal;
-			float3 vt = _velocity - vn;
+			float3 vn = dot(i->normal, velocity) * i->normal;
+			float3 vt = velocity - vn;
 
-			_velocity = vt - bounciness * vn;
+			velocity = vt - bounciness * vn;
 		}
 	}
 	return recalculate;

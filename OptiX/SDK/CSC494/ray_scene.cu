@@ -51,7 +51,8 @@ rtDeclareVariable(float2, orthoCameraSize, , );
 
 // Output buffers
 rtBuffer<uchar4, 2>              output_buffer;
-rtBuffer<uchar4, 2>              volume_buffer;
+rtBuffer<uchar4, 2>              volume_visual_buffer;
+rtBuffer<float, 2>               volume_buffer;
 
 // Volumetric variables
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
@@ -96,12 +97,14 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 				// Compute intersection volume and save it to our buffer
 				float volume = (firstInterval.y - secondInterval.x) * pixelSize.x * pixelSize.y;
 				float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
-				volume_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
+				volume_visual_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
+				volume_buffer[launch_index] = volume;
 				return true;
 			}
 		}
 	}
-	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
+	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
+	volume_buffer[launch_index] = 0.0f;
 	return false;
 }
 
@@ -129,7 +132,7 @@ RT_PROGRAM void perspective_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
+	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	if (prd.numIntersections > 0)
 	{
 		// Check for intersections (and fill in the intersection buffer)
@@ -165,7 +168,7 @@ RT_PROGRAM void orthographic_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	volume_buffer[launch_index] = make_color(make_float3(0, 0, 0));
+	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	if (prd.numIntersections > 0)
 	{
 		// Check for intersections (and fill in the intersection buffer)

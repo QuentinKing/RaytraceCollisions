@@ -83,6 +83,7 @@ int        mouse_button;
 //------------------------------------------------------------------------------
 
 Buffer GetOutputBuffer();
+Buffer GetVolumeVisualBuffer();
 Buffer GetVolumeBuffer();
 
 void DestroyContext();
@@ -112,6 +113,11 @@ void GlutResize(int w, int h);
 Buffer GetOutputBuffer()
 {
 	return context["output_buffer"]->getBuffer();
+}
+
+Buffer GetVolumeVisualBuffer()
+{
+	return context["volume_visual_buffer"]->getBuffer();
 }
 
 Buffer GetVolumeBuffer()
@@ -168,7 +174,10 @@ void CreateContext()
 	Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
 	context["output_buffer"]->set(buffer);
 
-	Buffer volume_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height);
+	Buffer volume_visual_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height);
+	context["volume_visual_buffer"]->set(volume_visual_buffer);
+
+	Buffer volume_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, width, height);
 	context["volume_buffer"]->set(volume_buffer);
 
 	// Determine what type of camera we are using
@@ -218,15 +227,15 @@ void CreateScene()
 
 	// Create rigidbody spheres
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
-	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 0.0f), 1.0f, false);
+	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.1, 0.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 5.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, make_float3(1.0f, 4.0, 0.0f), 1.0f, false);
+	rigidBody = RigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 0.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
-	rigidBody.AddForce(make_float3(2.0f, 10.0f, 0.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
@@ -392,6 +401,7 @@ void GlutDisplay()
 	context->launch(0, width, height);
 
 	Buffer renderBuffer = GetOutputBuffer();
+	Buffer volumeVisualBuffer = GetVolumeVisualBuffer();
 	Buffer volumeBuffer = GetVolumeBuffer();
 	switch (curRenderBuffer)
 	{
@@ -399,7 +409,7 @@ void GlutDisplay()
 		sutil::displayBufferGL(renderBuffer);
 		break;
 	case RenderBuffer::IntersectionVolume:
-		sutil::displayBufferGL(volumeBuffer);
+		sutil::displayBufferGL(volumeVisualBuffer);
 		break;
 	}
 
@@ -408,11 +418,11 @@ void GlutDisplay()
 	RTsize width, height;
 	volumeBuffer->getSize(width, height);
 	void* data = volumeBuffer->map();
-	char* volumeData = (char*)data;
+	float* volumeData = (float*)data;
 
-	for(uint i = 0; i < width*height*4; i+=4)
+	for(uint i = 0; i < width*height; i++)
 	{
-		volume += volumeData[i+2];
+		volume += volumeData[i];
 	}
 	volumeBuffer->unmap();
 

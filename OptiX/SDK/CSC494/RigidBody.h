@@ -37,19 +37,19 @@ public:
 		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 		// Init state
-		_mass = mass;
-		_inertiaBody = make_matrix3x3(Matrix4x4::identity());
-		_inertiaBodyInv = _inertiaBody.mat3inverse();
+		mass = mass;
+		inertiaBody = make_matrix3x3(Matrix4x4::identity());
+		inertiaBodyInv = inertiaBody.mat3inverse();
 
-		_position = startingPosition;
-		_quaternion = make_float4(1.0f, 0.0f, 0.0f, 0.0f);
-		_linearMomentum = make_float3(0.0f, 0.0f, 0.0f);
-		_angularMomentum = make_float3(0.0f, 0.0f, 0.0f);
+		position = startingPosition;
+		quaternion = make_float4(1.0f, 0.0f, 0.0f, 0.0f);
+		linearMomentum = make_float3(0.0f, 0.0f, 0.0f);
+		angularMomentum = make_float3(0.0f, 0.0f, 0.0f);
 
 		CalculateAuxiliaryVariables();
 
-		_force = make_float3(0.0f, 0.0f, 0.0f);
-		_torque = make_float3(0.0f, 0.0f, 0.0f);
+		force = make_float3(0.0f, 0.0f, 0.0f);
+		torque = make_float3(0.0f, 0.0f, 0.0f);
 
 		// Create transformation node
 		transformNode = context->createTransform();
@@ -98,25 +98,28 @@ private:
 
 	float bounciness;
 
+	// Rigidbody id
+	uint id;
+
 	// Rigidbody dynamics
-	double _mass;
-	Matrix3x3 _inertiaBody;
-	Matrix3x3 _inertiaBodyInv;
+	double mass;
+	Matrix3x3 inertiaBody;
+	Matrix3x3 inertiaBodyInv;
 
 	// State space variable
-	float3 _position;
-	float4 _quaternion;
-	float3 _linearMomentum;
-	float3 _angularMomentum;
+	float3 position;
+	float4 quaternion;
+	float3 linearMomentum;
+	float3 angularMomentum;
 
 	// Derived members
-	Matrix3x3 _inertiaInv;
-	float3 _velocity;
-	float3 _spinVector;
+	Matrix3x3 inertiaInv;
+	float3 velocity;
+	float3 spinVector;
 
 	// Computed quantities
-	float3 _force;
-	float3 _torque;
+	float3 force;
+	float3 torque;
 
 	// Testing
 	bool HandlePlaneCollisions(float3 positionDeriv);
