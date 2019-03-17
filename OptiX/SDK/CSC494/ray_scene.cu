@@ -88,10 +88,10 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 	float2 pixelSize = orthoCameraSize * 2.0 / screen;
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
-		float2 firstInterval = prd.intersections[i];
+		float2 firstInterval = make_float2(prd.intersections[i].entryTval, prd.intersections[i].exitTval);
 		for (int j = i + 1; j < prd.numIntersections; j++)
 		{
-			float2 secondInterval = prd.intersections[j];
+			float2 secondInterval = make_float2(prd.intersections[j].entryTval, prd.intersections[j].exitTval);
 			if (firstInterval.x <= secondInterval.y && firstInterval.y >= secondInterval.x)
 			{
 				// Compute intersection volume and save it to our buffer
@@ -165,8 +165,6 @@ RT_PROGRAM void orthographic_camera()
 	prd.numIntersections = 0;
 	prd.closestTval = 999999.0f;
 
-	prd.closestShadingNormal = make_float3(0.0, 1.0, 0.0);
-
 	rtTrace(top_object, ray, prd);
 
 	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
@@ -204,8 +202,14 @@ RT_PROGRAM void any_hit()
 	// Record our intersection values
 	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
 	{
+		IntersectionData data;
+		data.rigidBodyId = 0; //TODO
+		data.entryTval = t_values.x;
+		data.exitTval = t_values.y;
+		data.entryNormal = make_float3(0,1,0); //TODO
+		data.exitNormal = make_float3(0,1,0); //TODO
 
-		prd_radiance.intersections[prd_radiance.numIntersections] = t_values;
+		prd_radiance.intersections[prd_radiance.numIntersections] = data;
 		prd_radiance.numIntersections++;
 
 		// Is this the closest object we have seen so far?
@@ -213,7 +217,6 @@ RT_PROGRAM void any_hit()
 		{
 			// Update shading properties since this is now the closest object
 			prd_radiance.closestTval = min(t_values.x, t_values.y);
-			prd_radiance.closestShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 		}
 	}
 

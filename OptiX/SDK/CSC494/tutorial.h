@@ -5,7 +5,7 @@ using namespace optix;
 
 #define FLT_MAX         1e30;
 
-const int INTERSECTION_SAMPLES = 256;
+const int INTERSECTION_SAMPLES = 16;
 
 static __device__ __inline__ uchar4 make_color(const float3& c)
 {
@@ -15,6 +15,17 @@ static __device__ __inline__ uchar4 make_color(const float3& c)
 		255u);                                                 /* A */
 }
 
+struct IntersectionData
+{
+	uint rigidBodyId;
+
+	float entryTval;
+	float exitTval;
+
+	float3 entryNormal;
+	float3 exitNormal;
+};
+
 struct PerRayData_radiance
 {
 	float3 result;
@@ -23,11 +34,8 @@ struct PerRayData_radiance
 	int depth;
 
 	int numIntersections;
-	float2 intersections[INTERSECTION_SAMPLES]; // We'll store t-values of all intersections in this buffer
+	IntersectionData intersections[INTERSECTION_SAMPLES];
 	float closestTval; // The z-depth of the closest object in the scene
-
-	// Shading specific variables
-	float3 closestShadingNormal;
 };
 
 struct PerRayData_shadow
