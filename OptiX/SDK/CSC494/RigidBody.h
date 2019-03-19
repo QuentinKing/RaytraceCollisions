@@ -24,9 +24,10 @@ struct PlaneData
 class RigidBody
 {
 public:
-	RigidBody(Context context, GeometryInstance mesh, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
+	RigidBody(Context context, GeometryInstance mesh, uint id, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
 		context(context),
 		mesh(mesh),
+		id(id),
 		mass(mass),
 		useGravity(useGravity),
 		bounciness(bounciness)
@@ -36,6 +37,8 @@ public:
 		geometryGroup->setChildCount(1);
 		geometryGroup->setChild(0, mesh);
 		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
+
+		mesh->getGeometry()["id"]->setFloat(id);
 
 		// Init state
 		inertiaBody = make_matrix3x3(Matrix4x4::identity());

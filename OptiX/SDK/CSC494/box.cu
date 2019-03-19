@@ -31,16 +31,23 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
 
+#include "tutorial.h"
+
 using namespace optix;
 
 // Rigidbody variables
 rtDeclareVariable(float3, axisLengths, , );
 
 // Volumetric variables (All geometry need this)
-rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+
+// Rigidbody specific variables
+rtDeclareVariable(float, id, , );
+rtDeclareVariable(float, velocity, , );
+rtDeclareVariable(float, torque, , );
 
 // Shading variables (Technically not required, but usually used on all materials)
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
@@ -76,8 +83,16 @@ RT_PROGRAM void box_intersect(int)
 		if (rtPotentialIntersection(tmin)) 
 		{
 			ignore_intersection = ignore;
-			t_values = make_float2(tmin, tmax);
-			shading_normal = geometric_normal = boxnormal(tmin, t0, t1);
+
+			IntersectionData data;
+			data.rigidBodyId = id;
+			data.entryTval = tmin;
+			data.exitTval = tmax;
+			data.entryNormal = boxnormal(tmin, t0, t1);
+			data.exitNormal = boxnormal(tmax, t0, t1);
+			intersectionData = data;
+
+			shading_normal = geometric_normal = data.entryNormal;
 			rtReportIntersection(0);
 		}
 	}

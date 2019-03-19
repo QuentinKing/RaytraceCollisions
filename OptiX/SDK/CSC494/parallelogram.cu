@@ -27,6 +27,7 @@
  */
 
 #include <optix_world.h>
+#include "tutorial.h"
 
 using namespace optix;
 
@@ -39,7 +40,7 @@ rtDeclareVariable(int, lgt_instance, , ) = { 0 };
 rtDeclareVariable(float3, texcoord, attribute texcoord, );
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
-rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(int, lgt_idx, attribute lgt_idx, );
@@ -67,7 +68,15 @@ RT_PROGRAM void intersect(int primIdx)
 				if (rtPotentialIntersection(modified_t_value)) 
 				{
 					ignore_intersection = ignore;
-					t_values = make_float2(t, 999999.0);
+
+					IntersectionData data;
+					data.rigidBodyId = 99;
+					data.entryTval = t;
+					data.exitTval = 9999999.0;
+					data.entryNormal = n;
+					data.exitNormal = -n;
+					intersectionData = data;
+
 					shading_normal = geometric_normal = n;
 					texcoord = make_float3(a1, a2, 0);
 					lgt_idx = lgt_instance;

@@ -27,14 +27,20 @@
  */
 
 #include <optix_world.h>
+#include "tutorial.h"
 
 using namespace optix;
 
 // Volumetric variables (All geometry need this)
-rtDeclareVariable(float2, t_values, attribute t_values, );
+rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+
+// Rigidbody specific variables
+rtDeclareVariable(float, id, , );
+rtDeclareVariable(float, velocity, , );
+rtDeclareVariable(float, torque, , );
 
 // Sphere specific variables
 rtDeclareVariable(float, radius, , );
@@ -81,11 +87,8 @@ void intersect_sphere(void)
 			}
 		}
 
-		// Sphere may have two different solutions, gotta check both
-		bool check_second = true;
 		float t1 = root1 + root11;
 		float t2 = (-b + sdisc) + (do_refine ? root1 : 0);
-		float2 a = make_float2(t1, t2);
 
 		// Always call the any hit function, so we have to report an intersection closer than 
 		// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
@@ -96,10 +99,17 @@ void intersect_sphere(void)
 		if (rtPotentialIntersection(modified_t_value))
 		{
 			ignore_intersection = ignore;
-			t_values = a;
-			shading_normal = geometric_normal = (O + (root1 + root11)*D) / radius;
-			if (rtReportIntersection(0))
-				check_second = false;
+
+			IntersectionData data;
+			data.rigidBodyId = id;
+			data.entryTval = t1;
+			data.exitTval = t2;
+			data.entryNormal = (O + (root1 + root11)*D) / radius;
+			data.exitNormal = (O + t2*D)/radius;
+			intersectionData = data;
+
+			shading_normal = geometric_normal = data.entryNormal;
+			rtReportIntersection(0);
 		}
 	}
 }

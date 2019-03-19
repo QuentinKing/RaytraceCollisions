@@ -227,21 +227,21 @@ void CreateScene()
 
 	// Create rigidbody spheres
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
-	RigidBody rigidBody(context, sphereInstance, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
+	RigidBody rigidBody(context, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	rigidBody.AddTorque(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, make_float3(0.0f, 4.0, -4.0f), 1.0f, false);
+	rigidBody = RigidBody(context, sphereInstance, 1, make_float3(0.0f, 4.0, -4.0f), 1.0f, false);
 	rigidBody.RegisterPlane(make_float3(-64.0f, 0.0f, -64.0f), make_float3(0.0f, 1.0f, 0.0f));
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 8.0f));
 	rigidBody.AddTorque(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
-	rigidBody = RigidBody(context, boxInstance, make_float3(6.0f, 4.0f, 0.0f), 1.0f, false);
+	rigidBody = RigidBody(context, boxInstance, 2, make_float3(6.0f, 4.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
 	rigidBody.AddTorque(make_float3(0.25f, 0.5f, 1.0f));
 	//rigidBody.SetRotation(make_float4(0.0f, 0.0f, -0.3826834f, 0.9238795f));

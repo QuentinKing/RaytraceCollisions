@@ -55,8 +55,8 @@ rtBuffer<uchar4, 2>              volume_visual_buffer;
 rtBuffer<float, 2>               volume_buffer;
 
 // Volumetric variables
+rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
-rtDeclareVariable(float2, t_values, attribute t_values, );
 
 // Shading values
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -202,21 +202,14 @@ RT_PROGRAM void any_hit()
 	// Record our intersection values
 	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
 	{
-		IntersectionData data;
-		data.rigidBodyId = 0; //TODO
-		data.entryTval = t_values.x;
-		data.exitTval = t_values.y;
-		data.entryNormal = make_float3(0,1,0); //TODO
-		data.exitNormal = make_float3(0,1,0); //TODO
-
-		prd_radiance.intersections[prd_radiance.numIntersections] = data;
+		prd_radiance.intersections[prd_radiance.numIntersections] = intersectionData;
 		prd_radiance.numIntersections++;
 
 		// Is this the closest object we have seen so far?
-		if (min(t_values.x, t_values.y) < prd_radiance.closestTval)
+		if (intersectionData.entryTval < prd_radiance.closestTval)
 		{
 			// Update shading properties since this is now the closest object
-			prd_radiance.closestTval = min(t_values.x, t_values.y);
+			prd_radiance.closestTval = intersectionData.entryTval;
 		}
 	}
 
