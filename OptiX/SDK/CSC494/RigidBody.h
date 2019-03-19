@@ -74,6 +74,9 @@ public:
 	void AddTorque(float3 torque);
 	void UseGravity(bool useGravity);
 
+	float3 GetVelocity();
+	float3 GetSpin();
+
 	GeometryGroup GetGeometryGroup();
 	Transform GetTransform();
 

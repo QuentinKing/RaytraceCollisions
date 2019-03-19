@@ -2,6 +2,13 @@
 
 #include <optixu/optixu_vector_types.h>
 
+
+struct RigidbodyMotion
+{
+	float3 velocity;
+	float3 spin;
+};
+
 struct Light
 {
 #if defined(__cplusplus)

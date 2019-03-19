@@ -23,6 +23,9 @@ void RigidBody::CalculateAuxiliaryVariables()
 	velocity = linearMomentum / mass;
 	inertiaInv = rotation * inertiaBodyInv * rotation.transpose();
 	spinVector = inertiaInv * angularMomentum;
+
+	this->mesh->getGeometry()["velocity"]->setFloat(velocity);
+	this->mesh->getGeometry()["spinVector"]->setFloat(spinVector);
 }
 
 /*
@@ -116,6 +119,16 @@ void RigidBody::AddTorque(float3 torque)
 void RigidBody::UseGravity(bool useGravity)
 {
 	this->useGravity = useGravity;
+}
+
+float3 RigidBody::GetVelocity()
+{
+	return velocity;
+}
+
+float3 RigidBody::GetSpin()
+{
+	return spinVector;
 }
 
 GeometryGroup RigidBody::GetGeometryGroup()

@@ -54,6 +54,9 @@ rtBuffer<uchar4, 2>              output_buffer;
 rtBuffer<uchar4, 2>              volume_visual_buffer;
 rtBuffer<float, 2>               volume_buffer;
 
+// Rigidbody variables
+rtBuffer<RigidbodyMotion> rigidbodyMotions; 
+
 // Volumetric variables
 rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );

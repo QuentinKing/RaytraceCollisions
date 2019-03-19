@@ -47,6 +47,7 @@ const char*  scene_ptx;
 
 // Geometry
 std::vector<RigidBody> sceneRigidBodies;
+Buffer rigidbodyMotion_buffer;
 
 // Camera setup
 enum CameraType
@@ -93,6 +94,7 @@ void CreateScene();
 void CreateLights();
 void SetupCamera();
 void UpdateGeometry();
+void UpdateRigidbodyState();
 void UpdateCamera();
 void GlutInitialize(int* argc, char** argv);
 void GlutRun();
@@ -212,6 +214,12 @@ void CreateScene()
 {
 	GeometryCreator geometryCreator(context, PROJECT_NAME, SCENE_NAME);
 
+	// Rigidbody buffer
+	rigidbodyMotion_buffer = context->createBuffer( RT_BUFFER_INPUT );
+    rigidbodyMotion_buffer->setFormat( RT_FORMAT_USER );
+    rigidbodyMotion_buffer->setElementSize( sizeof( RigidbodyMotion ) );
+    rigidbodyMotion_buffer->setSize( sizeof(sceneRigidBodies)/sizeof(sceneRigidBodies[0]) );
+
 	// All non-rigidbody geometry
 	std::vector<GeometryInstance> staticGeometry;
 	GeometryGroup staticGroup = context->createGeometryGroup();
@@ -308,6 +316,27 @@ void UpdateGeometry()
 	}
 
 	last_update_time = sutil::currentTime();
+}
+
+// Pass rigidbody velocities to renderer
+void UpdateRigidbodyState()
+{
+	RigidbodyMotion* rigidbodyMotions = new RigidbodyMotion[static_cast<int>(sceneRigidBodies.size())];
+
+	int j = 0;
+	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
+	{
+		rigidbodyMotions[j].velocity = sceneRigidBodies[j].GetVelocity();
+		rigidbodyMotions[j].spin = sceneRigidBodies[j].GetSpin();
+		j++;
+	}
+
+    memcpy(rigidbodyMotion_buffer->map(), rigidbodyMotions, sizeof(rigidbodyMotions));
+    rigidbodyMotion_buffer->unmap();
+
+	context["rigidbodyMotions"]->set(rigidbodyMotion_buffer);
+
+	delete[] rigidbodyMotions;
 }
 
 void UpdateCamera()

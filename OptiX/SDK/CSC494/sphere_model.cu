@@ -40,7 +40,7 @@ rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 // Rigidbody specific variables
 rtDeclareVariable(float, id, , );
 rtDeclareVariable(float, velocity, , );
-rtDeclareVariable(float, torque, , );
+rtDeclareVariable(float, spinVector, , );
 
 // Sphere specific variables
 rtDeclareVariable(float, radius, , );
