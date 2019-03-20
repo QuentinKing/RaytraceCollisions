@@ -27,7 +27,7 @@
  */
 
 #include "tutorial.h"
-#include "Lights.h"
+#include "BufferStructs.h"
 
 // Ray data
 rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );

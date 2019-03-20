@@ -24,7 +24,7 @@
     <ClInclude Include="..\..\CSC494\RigidBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSC494\Lights.h">
+    <ClInclude Include="..\..\CSC494\BufferStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

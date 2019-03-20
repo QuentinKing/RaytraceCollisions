@@ -22,7 +22,7 @@
 #include <Arcball.h>
 #include "RigidBody.h"
 #include "GeomteryCreator.h"
-#include "Lights.h"
+#include "BufferStructs.h"
 
 using namespace optix;
 
