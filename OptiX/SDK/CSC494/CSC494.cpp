@@ -132,6 +132,11 @@ Buffer GetRigidbodyMotionBuffer()
 	return context["rigidbodyMotions"]->getBuffer();
 }
 
+Buffer GetResponseBuffer()
+{
+	return context["collisionResponse"]->getBuffer();
+}
+
 void DestroyContext()
 {
 	if (context)
@@ -227,10 +232,12 @@ void CreateScene()
 	Group sceneGroup = context->createGroup();
 
 	// Create floor (not a rigidbody)
+	/*
 	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.0f, -64.0f),
 		make_float3(128.0f, 0.0f, 0.0f),
 		make_float3(0.0f, 0.0f, 128.0f));
 	staticGeometry.push_back(planeInstance);
+	*/
 
 	// Create rigidbody spheres
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
@@ -249,9 +256,8 @@ void CreateScene()
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
 	rigidBody = RigidBody(context, boxInstance, 2, make_float3(6.0f, 4.0f, 0.0f), 1.0f, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 0.0f));
+	rigidBody.AddForce(make_float3(-12.0f, 0.0f, 0.0f));
 	rigidBody.AddTorque(make_float3(0.25f, 0.5f, 1.0f));
-	//rigidBody.SetRotation(make_float4(0.0f, 0.0f, -0.3826834f, 0.9238795f));
 	sceneRigidBodies.push_back(rigidBody);
 
 
@@ -296,9 +302,15 @@ void CreateScene()
 	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
     rigidbodyMotion_buffer->unmap();
 
-    context["rigidbodyMotions"]->set( rigidbodyMotion_buffer );
+    context["rigidbodyMotions"]->set(rigidbodyMotion_buffer);
+	context["numRigidbodies"]->setInt(sceneRigidBodies.size());
 
 	delete[] motions;
+
+	// Create collision response buffer
+	// 3D Array, each pixel stores the volume of intersection between every pair of rigidbodies
+	Buffer response_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, width, height, sceneRigidBodies.size());
+	context["collisionResponse"]->set(response_buffer);
 }
 
 void CreateLights()
@@ -457,6 +469,7 @@ void GlutDisplay()
 	Buffer renderBuffer = GetOutputBuffer();
 	Buffer volumeVisualBuffer = GetVolumeVisualBuffer();
 	Buffer volumeBuffer = GetVolumeBuffer();
+	Buffer responseBuffer = GetResponseBuffer();
 	switch (curRenderBuffer)
 	{
 	case RenderBuffer::ShadedOutput:
@@ -467,30 +480,49 @@ void GlutDisplay()
 		break;
 	}
 
-	// Report intersection volume
-	float volume = 0.0f;
-	RTsize width, height;
-	volumeBuffer->getSize(width, height);
-	void* data = volumeBuffer->map();
-	float* volumeData = (float*)data;
+	// Volume of all three potential collisions
+	float volume01 = 0.0f;
+	float volume02 = 0.0f;
+	float volume12 = 0.0f;
 
+	int numRigidbodies = sceneRigidBodies.size();
+	float* responseData = (float*)responseBuffer->map();
 	for(uint i = 0; i < width*height; i++)
 	{
-		volume += volumeData[i];
+		volume01 += responseData[i];
+		volume02 += responseData[i + (width*height)];
+		volume12 += responseData[i + 2*(width*height)];
 	}
-	volumeBuffer->unmap();
+
+	float total = volume01 + volume02 + volume12;
+
+	responseBuffer->unmap();
 
 	// Display intersection volume
 	char volumeText[64];
-	snprintf(volumeText, sizeof volumeText, "%f", volume);
-	sutil::displayText(volumeText, 25, height-25);
 
 	// Display collision detection
-	if (volume > 0.0f)
+	if (total > 0.0f)
 	{
 		char* collisionText = "Rigidbody collision detected!";
-		sutil::displayText(collisionText, 25, height-55);
+		sutil::displayText(collisionText, 25, height-25);
 	}
+
+	char* collisionText = "Intersection volume between sphere 1 and sphere 2";
+	sutil::displayText(collisionText, 25, height-45);
+	snprintf(volumeText, sizeof volumeText, "%f", volume01);
+	sutil::displayText(volumeText, 25, height-65);
+
+	collisionText = "Intersection volume between sphere 1 and box 1";
+	sutil::displayText(collisionText, 25, height-85);
+	snprintf(volumeText, sizeof volumeText, "%f", volume02);
+	sutil::displayText(volumeText, 25, height-105);
+
+	collisionText = "Intersection volume between sphere 2 and box 1";
+	sutil::displayText(collisionText, 25, height-125);
+	snprintf(volumeText, sizeof volumeText, "%f", volume12);
+	sutil::displayText(volumeText, 25, height-145);
+
 
 	// Display frames per second
 	sutil::displayFps(frame_count++);

@@ -72,7 +72,7 @@ RT_PROGRAM void intersect(int primIdx)
 					IntersectionData data;
 					data.rigidBodyId = 99;
 					data.entryTval = t;
-					data.exitTval = 9999999.0;
+					data.exitTval = t;
 					data.entryNormal = n;
 					data.exitNormal = -n;
 					intersectionData = data;

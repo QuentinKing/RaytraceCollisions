@@ -53,8 +53,10 @@ rtDeclareVariable(float2, orthoCameraSize, , );
 rtBuffer<uchar4, 2>              output_buffer;
 rtBuffer<uchar4, 2>              volume_visual_buffer;
 rtBuffer<float, 2>               volume_buffer;
+rtBuffer<float, 3>				 collisionResponse;
 
 // Rigidbody variables
+rtDeclareVariable(int, numRigidbodies, , );
 rtBuffer<RigidbodyMotion> rigidbodyMotions; 
 
 // Volumetric variables
@@ -78,14 +80,21 @@ rtDeclareVariable(float,   specularPower, , );
 // Scene values
 rtDeclareVariable(float3, bg_color, , );
 
-
 //
 // Collision volume functions
 //
+void ClearCollisionBuffer()
+{
+	int pairs = numRigidbodies * (numRigidbodies - 1) / 2;
+	for (uint i = 0; i < pairs; i++)
+	{
+		collisionResponse[make_uint3(launch_index.x, launch_index.y, i)] = 0.0f;
+	}
+}
 
 // Checks given a list of entry and exit points if any of them overlap
 // indicating that an intersection has occured for the current ray
-bool CheckIntersectionOverlap(PerRayData_radiance prd)
+void CheckIntersectionOverlap(PerRayData_radiance prd)
 {
 	float2 screen = make_float2(output_buffer.size());
 	float2 pixelSize = orthoCameraSize * 2.0 / screen;
@@ -95,21 +104,23 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 		for (int j = i + 1; j < prd.numIntersections; j++)
 		{
 			float2 secondInterval = make_float2(prd.intersections[j].entryTval, prd.intersections[j].exitTval);
-			if (firstInterval.x <= secondInterval.y && firstInterval.y >= secondInterval.x)
-			{
-				// Compute intersection volume and save it to our buffer
-				float intersection = min(abs(firstInterval.y - secondInterval.x), abs(secondInterval.y - firstInterval.x));
-				float volume = intersection * pixelSize.x * pixelSize.y;
-				float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
-				volume_visual_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
-				volume_buffer[launch_index] = volume;
-				return true;
-			}
+
+			// Compute intersection volume and save it to our buffer
+			float intersection = max(0.0f, min(firstInterval.y, secondInterval.y) - max(firstInterval.x, secondInterval.x));
+			float volume = intersection * pixelSize.x * pixelSize.y;
+			float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
+			volume_visual_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
+			volume_buffer[launch_index] = volume;
+
+			// Write to collision response buffer
+			int d1 = min(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
+			int d2 = max(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
+			int pairIndex = (d1 * (numRigidbodies - 1)) + (d2 - 1) - (d1*(d1 + 1) / 2);
+			collisionResponse[make_uint3(launch_index.x, launch_index.y, pairIndex)] = volume;
 		}
 	}
 	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	volume_buffer[launch_index] = 0.0f;
-	return false;
 }
 
 
@@ -120,6 +131,8 @@ bool CheckIntersectionOverlap(PerRayData_radiance prd)
 // Perspective camera
 RT_PROGRAM void perspective_camera()
 {
+	ClearCollisionBuffer();
+
 	size_t2 screen = output_buffer.size();
 
 	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
@@ -154,6 +167,8 @@ RT_PROGRAM void perspective_camera()
 // Orthographic camera (easier calculations for intersection volumes)
 RT_PROGRAM void orthographic_camera()
 {
+	ClearCollisionBuffer();
+
 	size_t2 screen = output_buffer.size();
 
 	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
@@ -270,7 +285,7 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 		}
 	}
 
-	prd_radiance.result = rigidbodyMotions[intersectionData.rigidBodyId].velocity;
+	prd_radiance.result = color;
 }
 
 RT_PROGRAM void any_hit_shadow()
