@@ -270,7 +270,7 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 		}
 	}
 
-	prd_radiance.result = intersectionData.rigidBodyId > 0 ? make_float3(1.0f, 0.0f, 0.0f) : make_float3(0.0f, 1.0f, 0.0f);// rigidbodyMotions[intersectionData.rigidBodyId].velocity;
+	prd_radiance.result = rigidbodyMotions[intersectionData.rigidBodyId].velocity;
 }
 
 RT_PROGRAM void any_hit_shadow()
