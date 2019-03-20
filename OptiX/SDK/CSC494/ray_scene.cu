@@ -52,7 +52,6 @@ rtDeclareVariable(float2, orthoCameraSize, , );
 // Output buffers
 rtBuffer<uchar4, 2>              output_buffer;
 rtBuffer<uchar4, 2>              volume_visual_buffer;
-rtBuffer<float, 2>               volume_buffer;
 rtBuffer<float, 3>				 collisionResponse;
 
 // Rigidbody variables
@@ -98,6 +97,7 @@ void CheckIntersectionOverlap(PerRayData_radiance prd)
 {
 	float2 screen = make_float2(output_buffer.size());
 	float2 pixelSize = orthoCameraSize * 2.0 / screen;
+	float total = 0.0f;
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
 		float2 firstInterval = make_float2(prd.intersections[i].entryTval, prd.intersections[i].exitTval);
@@ -108,19 +108,17 @@ void CheckIntersectionOverlap(PerRayData_radiance prd)
 			// Compute intersection volume and save it to our buffer
 			float intersection = max(0.0f, min(firstInterval.y, secondInterval.y) - max(firstInterval.x, secondInterval.x));
 			float volume = intersection * pixelSize.x * pixelSize.y;
-			float col = volume * screen.x * screen.y * 0.05f; // Compute a relevant color value for the buffer
-			volume_visual_buffer[launch_index] = make_color(make_float3(col+0.1, 0, 0));
-			volume_buffer[launch_index] = volume;
 
 			// Write to collision response buffer
 			int d1 = min(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
 			int d2 = max(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
 			int pairIndex = (d1 * (numRigidbodies - 1)) + (d2 - 1) - (d1*(d1 + 1) / 2);
 			collisionResponse[make_uint3(launch_index.x, launch_index.y, pairIndex)] = volume;
+			total += volume;
 		}
 	}
-	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
-	volume_buffer[launch_index] = 0.0f;
+	float col = total * screen.x * screen.y * 0.0002f; // Compute a relevant color value for the buffer
+	volume_visual_buffer[launch_index] = make_color(make_float3(col, 0, 0));
 }
 
 

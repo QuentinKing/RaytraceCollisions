@@ -84,7 +84,6 @@ int        mouse_button;
 
 Buffer GetOutputBuffer();
 Buffer GetVolumeVisualBuffer();
-Buffer GetVolumeBuffer();
 Buffer GetRigidbodyMotionBuffer();
 
 void DestroyContext();
@@ -122,10 +121,6 @@ Buffer GetVolumeVisualBuffer()
 	return context["volume_visual_buffer"]->getBuffer();
 }
 
-Buffer GetVolumeBuffer()
-{
-	return context["volume_buffer"]->getBuffer();
-}
 
 Buffer GetRigidbodyMotionBuffer()
 {
@@ -188,9 +183,6 @@ void CreateContext()
 
 	Buffer volume_visual_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height);
 	context["volume_visual_buffer"]->set(volume_visual_buffer);
-
-	Buffer volume_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, width, height);
-	context["volume_buffer"]->set(volume_buffer);
 
 	// Determine what type of camera we are using
 	std::string camera_name;
@@ -468,7 +460,6 @@ void GlutDisplay()
 
 	Buffer renderBuffer = GetOutputBuffer();
 	Buffer volumeVisualBuffer = GetVolumeVisualBuffer();
-	Buffer volumeBuffer = GetVolumeBuffer();
 	Buffer responseBuffer = GetResponseBuffer();
 	switch (curRenderBuffer)
 	{
