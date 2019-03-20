@@ -277,6 +277,7 @@ void CreateScene()
 	context["top_shadower"]->set(sceneGroup);
 
 	CreateLights();
+	UpdateRigidbodyState();
 }
 
 void CreateLights()
@@ -427,6 +428,7 @@ void GlutRun()
 void GlutDisplay()
 {
 	UpdateGeometry();
+	UpdateRigidbodyState();
 	UpdateCamera();
 
 	context->launch(0, width, height);

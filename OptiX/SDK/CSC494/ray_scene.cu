@@ -270,7 +270,7 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 		}
 	}
 
-	prd_radiance.result = color;
+	prd_radiance.result = intersectionData.rigidBodyId > 0 ? make_float3(1.0f, 0.0f, 0.0f) : make_float3(0.0f, 1.0f, 0.0f);// rigidbodyMotions[intersectionData.rigidBodyId].velocity;
 }
 
 RT_PROGRAM void any_hit_shadow()
@@ -390,5 +390,7 @@ RT_PROGRAM void closest_hit_radiance_box()
 // Exception program, deafult to some known exception color
 RT_PROGRAM void exception()
 {
+	const unsigned int code = rtGetExceptionCode();
+	rtPrintf("Exception code 0x%X at (%d, %d)\n", code, launch_index.x, launch_index.y);
 	output_buffer[launch_index] = make_color(bad_color);
 }

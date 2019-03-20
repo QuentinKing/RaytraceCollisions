@@ -5,6 +5,9 @@
 
 struct RigidbodyMotion
 {
+#if defined(__cplusplus)
+	typedef optix::float3 float3;
+#endif
 	float3 velocity;
 	float3 spin;
 };
