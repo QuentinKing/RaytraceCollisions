@@ -69,7 +69,7 @@ public:
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
-	void RegisterPlane(float3 point, float3 normal);
+	void AddForceAtRelativePosition(float3 force, float3 worldPosition);
 	void AddForce(float3 force);
 	void AddTorque(float3 torque);
 	void UseGravity(bool useGravity);
@@ -126,8 +126,4 @@ private:
 	// Computed quantities
 	float3 force;
 	float3 torque;
-
-	// Testing
-	bool HandlePlaneCollisions(float3 positionDeriv);
-	std::vector<PlaneData> planeCollisions;
 };

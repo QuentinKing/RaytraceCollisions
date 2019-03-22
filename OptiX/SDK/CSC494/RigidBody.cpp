@@ -52,17 +52,6 @@ void RigidBody::ODE(float deltaTime)
 	float3 quaternionDotV = quaternion.x * spinVector + cross(spinVector, quaternionV);
 	float4 quaternionDot = 0.5 * make_float4(quaternionDotS, quaternionDotV.x, quaternionDotV.y, quaternionDotV.z);
 
-	// Handle plane collisions
-	/*
-	if (HandlePlaneCollisions(positionDot))
-	{
-		positionDot = _velocity * deltaTime;
-		rotationDot = Star(_spinVector) * _rotation * deltaTime;
-		linearMomentumDot = _force * deltaTime;
-		angularMomentumDot = _torque * deltaTime;
-	}
-	*/
-
 	// Update rigidbody
 	position += positionDot;
 	quaternion += quaternionDot;
@@ -105,6 +94,15 @@ void RigidBody::UpdateTransformNode()
 	MarkGroupAsDirty();
 }
 
+/*
+	Adds a force at a position relative to the center of mass.
+	The position given should be close to the surface of the object
+*/
+void RigidBody::AddForceAtRelativePosition(float3 force, float3 worldPosition)
+{
+	this->force += force;
+	this->torque += cross(worldPosition-this->position, force) * 0.01;
+}
 
 void RigidBody::AddForce(float3 force)
 {
@@ -146,22 +144,19 @@ void RigidBody::MarkGroupAsDirty()
 	geometryGroup->getAcceleration()->markDirty();
 }
 
-
-
-
 Matrix3x3 RigidBody::QuaternionToRotation(float4 quaternion)
 {
 	normalize(quaternion);
 	float temp[9];
-	temp[0] = 1.0f - 2*quaternion.y*quaternion.y - 2*quaternion.z*quaternion.z;
-	temp[1] = 2*quaternion.x*quaternion.y - 2*quaternion.z*quaternion.w;
-	temp[2] = 2*quaternion.x*quaternion.z + 2*quaternion.y*quaternion.w;
-	temp[3] = 2*quaternion.x*quaternion.y + 2*quaternion.z*quaternion.w;
-	temp[4] = 1.0f - 2*quaternion.x*quaternion.x - 2*quaternion.z*quaternion.z;
-	temp[5] = 2*quaternion.y*quaternion.z - 2*quaternion.x*quaternion.w;
-	temp[6] = 2*quaternion.x*quaternion.z - 2*quaternion.y*quaternion.w;
-	temp[7] = 2*quaternion.y*quaternion.z + 2*quaternion.x*quaternion.w;
-	temp[8] = 1.0f - 2*quaternion.x*quaternion.x - 2*quaternion.y*quaternion.y;
+	temp[0] = 1.0f - 2*quaternion.z*quaternion.z - 2*quaternion.w*quaternion.w;
+	temp[1] = 2*quaternion.y*quaternion.z - 2*quaternion.x*quaternion.w;
+	temp[2] = 2*quaternion.y*quaternion.w + 2*quaternion.x*quaternion.z;
+	temp[3] = 2*quaternion.y*quaternion.z + 2*quaternion.x*quaternion.w;
+	temp[4] = 1.0f - 2*quaternion.y*quaternion.y - 2*quaternion.w*quaternion.w;
+	temp[5] = 2*quaternion.z*quaternion.w - 2*quaternion.x*quaternion.y;
+	temp[6] = 2*quaternion.y*quaternion.w - 2*quaternion.x*quaternion.z;
+	temp[7] = 2*quaternion.z*quaternion.w + 2*quaternion.x*quaternion.y;
+	temp[8] = 1.0f - 2*quaternion.y*quaternion.y - 2*quaternion.z*quaternion.z;
 	Matrix3x3 rotation(temp);
 	return rotation;
 }
@@ -220,32 +215,4 @@ float4 RigidBody::RotationToQuaternion(Matrix3x3 rotation)
 		}
 	}
 	return quaternion;
-}
-
-// TODO: Delete this. just testing out some physic responses
-bool RigidBody::HandlePlaneCollisions(float3 positionDot)
-{
-	float3 newPosition = position + positionDot;
-	bool recalculate = false;
-	for (auto i = planeCollisions.begin(); i != planeCollisions.end(); i++)
-	{
-		// Particle / plane collision detection
-		// Collision if this is less than zero
-		// Right now, hardcoding it as a sphere with radius 3
-		float sdf = dot(newPosition - i->point, i->normal) - 3.0f;
-		if (sdf < 0.0f)
-		{
-			recalculate = true;
-
-			float3 vn = dot(i->normal, velocity) * i->normal;
-			float3 vt = velocity - vn;
-
-			velocity = vt - bounciness * vn;
-		}
-	}
-	return recalculate;
-}
-void RigidBody::RegisterPlane(float3 point, float3 normal)
-{
-	planeCollisions.push_back(PlaneData(point, normal));
 }
