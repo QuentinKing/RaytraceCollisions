@@ -50,9 +50,9 @@ rtDeclareVariable(float3, bad_color, , );
 rtDeclareVariable(float2, orthoCameraSize, , );
 
 // Output buffers
-rtBuffer<uchar4, 2>              output_buffer;
-rtBuffer<uchar4, 2>              volume_visual_buffer;
-rtBuffer<float, 3>				 collisionResponse;
+rtBuffer<uchar4, 2>								 output_buffer;
+rtBuffer<uchar4, 2>								 volume_visual_buffer;
+rtBuffer<IntersectionResponse, 2>				 collisionResponse;
 
 // Rigidbody variables
 rtDeclareVariable(int, numRigidbodies, , );
@@ -79,25 +79,27 @@ rtDeclareVariable(float,   specularPower, , );
 // Scene values
 rtDeclareVariable(float3, bg_color, , );
 
-//
-// Collision volume functions
-//
-void ClearCollisionBuffer()
+void ClearResponseBuffer()
 {
-	int pairs = numRigidbodies * (numRigidbodies - 1) / 2;
-	for (uint i = 0; i < pairs; i++)
-	{
-		collisionResponse[make_uint3(launch_index.x, launch_index.y, i)] = 0.0f;
-	}
+	IntersectionResponse data;
+	data.volume = 0.0f;
+	data.entryId = 0;
+	data.entryNormal = make_float3(0.0f,0.0f,0.0f);
+	data.exitId = 0;
+	data.exitNormal = make_float3(0.0f,0.0f,0.0f);
+	data.entryPoint = make_float3(0.0f,0.0f,0.0f);
+	data.exitPoint = make_float3(0.0f,0.0f,0.0f);
+	collisionResponse[launch_index] = data;
 }
 
 // Checks given a list of entry and exit points if any of them overlap
 // indicating that an intersection has occured for the current ray
-void CheckIntersectionOverlap(PerRayData_radiance prd)
+void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3 ray_direction)
 {
 	float2 screen = make_float2(output_buffer.size());
 	float2 pixelSize = orthoCameraSize * 2.0 / screen;
 	float total = 0.0f;
+
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
 		float2 firstInterval = make_float2(prd.intersections[i].entryTval, prd.intersections[i].exitTval);
@@ -107,13 +109,27 @@ void CheckIntersectionOverlap(PerRayData_radiance prd)
 
 			// Compute intersection volume and save it to our buffer
 			float intersection = max(0.0f, min(firstInterval.y, secondInterval.y) - max(firstInterval.x, secondInterval.x));
+			int entryIndex = max(firstInterval.x, secondInterval.x) == firstInterval.x ? i : j;
+			int exitIndex = min(firstInterval.y, secondInterval.y) == firstInterval.y ? i : j;
 			float volume = intersection * pixelSize.x * pixelSize.y;
 
 			// Write to collision response buffer
+			/*
 			int d1 = min(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
 			int d2 = max(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
 			int pairIndex = (d1 * (numRigidbodies - 1)) + (d2 - 1) - (d1*(d1 + 1) / 2);
-			collisionResponse[make_uint3(launch_index.x, launch_index.y, pairIndex)] = volume;
+			*/
+
+			IntersectionResponse data;
+			data.volume = volume;
+			data.entryId = prd.intersections[entryIndex].rigidBodyId;
+			data.entryNormal = prd.intersections[entryIndex].entryNormal;
+			data.exitId = prd.intersections[exitIndex].rigidBodyId;
+			data.exitNormal = prd.intersections[exitIndex].exitNormal;
+			data.entryPoint = ray_origin + prd.intersections[entryIndex].entryTval * ray_direction;
+			data.exitPoint = ray_origin + prd.intersections[exitIndex].exitTval * ray_direction;
+			collisionResponse[launch_index] = data;
+
 			total += volume;
 		}
 	}
@@ -129,7 +145,7 @@ void CheckIntersectionOverlap(PerRayData_radiance prd)
 // Perspective camera
 RT_PROGRAM void perspective_camera()
 {
-	ClearCollisionBuffer();
+	ClearResponseBuffer();
 
 	size_t2 screen = output_buffer.size();
 
@@ -151,7 +167,7 @@ RT_PROGRAM void perspective_camera()
 	if (prd.numIntersections > 0)
 	{
 		// Check for intersections (and fill in the intersection buffer)
-		CheckIntersectionOverlap(prd);
+		CheckIntersectionOverlap(prd, ray_origin, ray_direction);
 
 		// Shade the object with the properties we saved while raycasting
 		output_buffer[launch_index] = make_color(prd.result);
@@ -165,7 +181,7 @@ RT_PROGRAM void perspective_camera()
 // Orthographic camera (easier calculations for intersection volumes)
 RT_PROGRAM void orthographic_camera()
 {
-	ClearCollisionBuffer();
+	ClearResponseBuffer();
 
 	size_t2 screen = output_buffer.size();
 
@@ -187,7 +203,7 @@ RT_PROGRAM void orthographic_camera()
 	if (prd.numIntersections > 0)
 	{
 		// Check for intersections (and fill in the intersection buffer)
-		CheckIntersectionOverlap(prd);
+		CheckIntersectionOverlap(prd, ray_origin, ray_direction);
 
 		// Shade the object with the properties we saved while raycasting
 		// This is essentially the closest hit shader

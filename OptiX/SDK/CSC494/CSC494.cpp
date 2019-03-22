@@ -232,25 +232,22 @@ void CreateScene()
 	*/
 
 	// Create rigidbody spheres
-	/*
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
 	RigidBody rigidBody(context, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
-	rigidBody.AddTorque(make_float3(0.0f, 0.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, 1, make_float3(0.0f, 4.0, -4.0f), 1.0f, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 8.0f));
-	rigidBody.AddTorque(make_float3(0.0f, 0.0f, 0.0f));
+	rigidBody = RigidBody(context, sphereInstance, 1, make_float3(0.0f, 5.0, -4.0f), 1.0f, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
 	sceneRigidBodies.push_back(rigidBody);
-	*/
 
+	/*
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
 	RigidBody rigidBody = RigidBody(context, boxInstance, 2, make_float3(6.0f, 4.0f, 0.0f), 1.0f, false);
 	rigidBody.AddForceAtRelativePosition(make_float3(-12.0f, 0.0f, 0.0f), make_float3(7.5f, 5.0f, 0.0f));
 	sceneRigidBodies.push_back(rigidBody);
-
+	*/
 
 	// Create static geometry group
 	staticGroup->setChildCount(static_cast<unsigned int>(staticGeometry.size()));
@@ -299,8 +296,12 @@ void CreateScene()
 	delete[] motions;
 
 	// Create collision response buffer
-	// 3D Array, each pixel stores the volume of intersection between every pair of rigidbodies
-	Buffer response_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT, width, height, sceneRigidBodies.size());
+	// Each pixel stores the volume of intersection between the pair of rigidbodies
+	Buffer response_buffer = context->createBuffer( RT_BUFFER_INPUT_OUTPUT );
+    response_buffer->setFormat( RT_FORMAT_USER );
+    response_buffer->setElementSize( sizeof( IntersectionResponse ) );
+    response_buffer->setSize(width, height);
+
 	context["collisionResponse"]->set(response_buffer);
 }
 
@@ -472,21 +473,21 @@ void GlutDisplay()
 
 	// Volume of all three potential collisions
 	float volume01 = 0.0f;
+	/*
 	float volume02 = 0.0f;
 	float volume12 = 0.0f;
+	*/
 
 	int numRigidbodies = sceneRigidBodies.size();
-	float* responseData = (float*)responseBuffer->map();
+	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	for(uint i = 0; i < width*height; i++)
 	{
+		volume01 += responseData[i].volume;
 		/*
-		volume01 += responseData[i];
 		volume02 += responseData[i + (width*height)];
 		volume12 += responseData[i + 2*(width*height)];
 		*/
 	}
-
-	float total = volume01 + volume02 + volume12;
 
 	responseBuffer->unmap();
 
@@ -494,7 +495,7 @@ void GlutDisplay()
 	char volumeText[64];
 
 	// Display collision detection
-	if (total > 0.0f)
+	if (volume01 > 0.0f)
 	{
 		char* collisionText = "Rigidbody collision detected!";
 		sutil::displayText(collisionText, 25, height-25);
@@ -505,6 +506,7 @@ void GlutDisplay()
 	snprintf(volumeText, sizeof volumeText, "%f", volume01);
 	sutil::displayText(volumeText, 25, height-65);
 
+	/*
 	collisionText = "Intersection volume between sphere 1 and box 1";
 	sutil::displayText(collisionText, 25, height-85);
 	snprintf(volumeText, sizeof volumeText, "%f", volume02);
@@ -514,7 +516,7 @@ void GlutDisplay()
 	sutil::displayText(collisionText, 25, height-125);
 	snprintf(volumeText, sizeof volumeText, "%f", volume12);
 	sutil::displayText(volumeText, 25, height-145);
-
+	*/
 
 	// Display frames per second
 	sutil::displayFps(frame_count++);
@@ -522,6 +524,22 @@ void GlutDisplay()
 	glutSwapBuffers();
 
 	// Resolve collisions
+	float k = 0.001f;
+	if (volume01 > 0.0f)
+	{
+		// Iterate over volume buffer again and apply forces on the bodies
+		// (Soft constraint)
+		float forceCoefficient = 0.5f * k * volume01;
+		for(uint i = 0; i < width*height; i++)
+		{
+			if (responseData[i].volume > 0.0f)
+			{
+				IntersectionResponse response = responseData[i];
+				sceneRigidBodies[response.entryId].AddForceAtRelativePosition(-response.entryNormal * forceCoefficient, response.entryPoint);
+				sceneRigidBodies[response.exitId].AddForceAtRelativePosition(-response.exitNormal * forceCoefficient, response.exitPoint);
+			}
+		}
+	}
 }
 
 
