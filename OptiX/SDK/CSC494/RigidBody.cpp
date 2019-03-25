@@ -33,14 +33,15 @@ void RigidBody::CalculateAuxiliaryVariables()
 */
 void RigidBody::ODE(float deltaTime)
 {
-	// Add constant forces
-	/*
+	// Apply Gravity
 	if (useGravity)
 	{
-		_force += make_float3(0.0f, _mass * -9.80665, 0.0f); // gravity
+		force += make_float3(0.0f, mass * -9.80665, 0.0f);
 	}
-	_force += -_velocity * kDrag; // drag
-	*/
+
+	// Apply drag
+	force += -linearMomentum * kDrag;
+	torque += -angularMomentum * kDrag;
 
 	// Calculate derivative of the state space
 	float3 positionDot = velocity * deltaTime;

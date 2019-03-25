@@ -99,7 +99,7 @@ private:
 	float transformMatrix[16];
 
 	// TODO: Set based on geometry
-	float kDrag = 0.1f; // Coefficient of drag
+	float kDrag = 0.5f; // Coefficient of drag
 	bool useGravity;
 
 	float bounciness;

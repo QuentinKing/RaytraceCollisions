@@ -95,15 +95,16 @@ void SetupCamera();
 void UpdateGeometry();
 void UpdateRigidbodyState();
 void UpdateCamera();
+void ResolveCollisions(float volume, int intersectionPixels, IntersectionResponse* responseData);
+void DisplayGUI(float volume);
+
 void GlutInitialize(int* argc, char** argv);
 void GlutRun();
-
 void GlutDisplay();
 void GlutKeyboardPress(unsigned char k, int x, int y);
 void GlutMousePress(int button, int state, int x, int y);
 void GlutMouseMotion(int x, int y);
 void GlutResize(int w, int h);
-
 
 //------------------------------------------------------------------------------
 //
@@ -242,17 +243,18 @@ void CreateScene()
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
+	/*
 	sphereInstance = geometryCreator.CreateSphere(3.0f);
 	rigidBody = RigidBody(context, sphereInstance, 1, make_float3(0.0f, 5.0, -4.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
 	sceneRigidBodies.push_back(rigidBody);
-
-	/*
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
-	RigidBody rigidBody = RigidBody(context, boxInstance, 2, make_float3(6.0f, 4.0f, 0.0f), 1.0f, false);
-	rigidBody.AddForceAtRelativePosition(make_float3(-12.0f, 0.0f, 0.0f), make_float3(7.5f, 5.0f, 0.0f));
-	sceneRigidBodies.push_back(rigidBody);
 	*/
+
+
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
+	rigidBody = RigidBody(context, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
+	sceneRigidBodies.push_back(rigidBody);
 
 	// Create static geometry group
 	staticGroup->setChildCount(static_cast<unsigned int>(staticGeometry.size()));
@@ -408,6 +410,34 @@ void UpdateCamera()
 	context["orthoCameraSize"]->setFloat(make_float2(10.0f, 10.0f * ((float)height/width)));
 }
 
+void ResolveCollisions(float volume, int intersectionPixels, IntersectionResponse* responseData)
+{
+	// Resolve collisions
+	float k = 10.0f;
+	float forceTotal = 0.0f;
+	if (volume > 0.0f)
+	{
+		// Iterate over volume buffer again and apply forces on the bodies
+		// (Soft constraint)
+		float forceCoefficient = 0.5f * k * volume / intersectionPixels;
+		for(uint i = 0; i < width*height; i++)
+		{
+			if (responseData[i].volume > 0.0f)
+			{
+				IntersectionResponse response = responseData[i];
+				forceTotal += GetMagnitude(-response.entryNormal * forceCoefficient);
+				forceTotal += GetMagnitude(-response.exitNormal * forceCoefficient);
+				sceneRigidBodies[response.entryId].AddForceAtRelativePosition(-response.entryNormal * forceCoefficient, response.entryPoint);
+				sceneRigidBodies[response.exitId].AddForceAtRelativePosition(-response.exitNormal * forceCoefficient, response.exitPoint);
+			}
+		}
+	}
+	if (forceTotal > 0.0f)
+	{
+		std::cout << forceTotal << std::endl;
+	}
+}
+
 
 void GlutInitialize(int* argc, char** argv)
 {
@@ -481,6 +511,7 @@ void GlutDisplay()
 
 	int numRigidbodies = sceneRigidBodies.size();
 	int intersectionPixels = 0; // Number of pixels that registered an intersection
+
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	for(uint i = 0; i < width*height; i++)
 	{
@@ -490,9 +521,17 @@ void GlutDisplay()
 			intersectionPixels++;
 		}
 	}
-
 	responseBuffer->unmap();
 
+	DisplayGUI(volume);
+
+	ResolveCollisions(volume, intersectionPixels, responseData);
+
+	glutSwapBuffers();
+}
+
+void DisplayGUI(float volume)
+{
 	// Display intersection volume
 	char volumeText[64];
 
@@ -510,33 +549,6 @@ void GlutDisplay()
 
 	// Display frames per second
 	sutil::displayFps(frame_count++);
-
-	glutSwapBuffers();
-
-	// Resolve collisions
-	float k = 10.0f;
-	float forceTotal = 0.0f;
-	if (volume > 0.0f)
-	{
-		// Iterate over volume buffer again and apply forces on the bodies
-		// (Soft constraint)
-		float forceCoefficient = 0.5f * k * volume / intersectionPixels;
-		for(uint i = 0; i < width*height; i++)
-		{
-			if (responseData[i].volume > 0.0f)
-			{
-				IntersectionResponse response = responseData[i];
-				forceTotal += GetMagnitude(-response.entryNormal * forceCoefficient);
-				forceTotal += GetMagnitude(-response.exitNormal * forceCoefficient);
-				sceneRigidBodies[response.entryId].AddForceAtRelativePosition(-response.entryNormal * forceCoefficient, response.entryPoint);
-				sceneRigidBodies[response.exitId].AddForceAtRelativePosition(-response.exitNormal * forceCoefficient, response.exitPoint);
-			}
-		}
-	}
-	if (forceTotal > 0.0f)
-	{
-		std::cout << forceTotal << std::endl;
-	}
 }
 
 void GlutKeyboardPress(unsigned char k, int x, int y)
