@@ -69,7 +69,8 @@ public:
 	~RigidBody() {};
 
 	void EulerStep(float deltaTime);
-	void AddForceAtRelativePosition(float3 force, float3 worldPosition);
+	void AddForceAtPosition(float3 force, float3 worldPosition);
+	void AddImpulseAtPosition(float3 impulse, float3 worldPosition);
 	void AddForce(float3 force);
 	void AddTorque(float3 torque);
 	void UseGravity(bool useGravity);

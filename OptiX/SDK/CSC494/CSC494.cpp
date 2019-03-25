@@ -419,7 +419,7 @@ void ResolveCollisions(float volume, int intersectionPixels, IntersectionRespons
 	{
 		// Iterate over volume buffer again and apply forces on the bodies
 		// (Soft constraint)
-		float forceCoefficient = 0.5f * k * volume / intersectionPixels;
+		float forceCoefficient = 0.2f * k * volume / intersectionPixels;
 		for(uint i = 0; i < width*height; i++)
 		{
 			if (responseData[i].volume > 0.0f)
@@ -427,8 +427,8 @@ void ResolveCollisions(float volume, int intersectionPixels, IntersectionRespons
 				IntersectionResponse response = responseData[i];
 				forceTotal += GetMagnitude(-response.entryNormal * forceCoefficient);
 				forceTotal += GetMagnitude(-response.exitNormal * forceCoefficient);
-				sceneRigidBodies[response.entryId].AddForceAtRelativePosition(-response.entryNormal * forceCoefficient, response.entryPoint);
-				sceneRigidBodies[response.exitId].AddForceAtRelativePosition(-response.exitNormal * forceCoefficient, response.exitPoint);
+				sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * forceCoefficient, response.entryPoint);
+				sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * forceCoefficient, response.exitPoint);
 			}
 		}
 	}

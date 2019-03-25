@@ -99,10 +99,20 @@ void RigidBody::UpdateTransformNode()
 	Adds a force at a position relative to the center of mass.
 	The position given should be close to the surface of the object
 */
-void RigidBody::AddForceAtRelativePosition(float3 force, float3 worldPosition)
+void RigidBody::AddForceAtPosition(float3 force, float3 worldPosition)
 {
 	this->force += force;
 	this->torque += cross(worldPosition-this->position, force) * 0.01;
+}
+
+/*
+	Adds an impulse at the given position.
+	The position given should be close to the surface of the object
+*/
+void RigidBody::AddImpulseAtPosition(float3 impulse, float3 worldPosition)
+{
+	this->linearMomentum += impulse;
+	this->angularMomentum += cross(worldPosition-this->position, impulse) * 0.01;
 }
 
 void RigidBody::AddForce(float3 force)
