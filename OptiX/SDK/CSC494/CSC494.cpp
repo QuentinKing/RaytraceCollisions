@@ -152,6 +152,11 @@ void RegisterExitHandler()
 #endif
 }
 
+float GetMagnitude(float3 vector)
+{
+	return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+}
+
 
 void CreateContext()
 {
@@ -472,21 +477,18 @@ void GlutDisplay()
 	}
 
 	// Volume of all three potential collisions
-	float volume01 = 0.0f;
-	/*
-	float volume02 = 0.0f;
-	float volume12 = 0.0f;
-	*/
+	float volume = 0.0f;
 
 	int numRigidbodies = sceneRigidBodies.size();
+	int intersectionPixels = 0; // Number of pixels that registered an intersection
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	for(uint i = 0; i < width*height; i++)
 	{
-		volume01 += responseData[i].volume;
-		/*
-		volume02 += responseData[i + (width*height)];
-		volume12 += responseData[i + 2*(width*height)];
-		*/
+		volume += responseData[i].volume;
+		if (responseData[i].volume > 0.0f)
+		{
+			intersectionPixels++;
+		}
 	}
 
 	responseBuffer->unmap();
@@ -495,7 +497,7 @@ void GlutDisplay()
 	char volumeText[64];
 
 	// Display collision detection
-	if (volume01 > 0.0f)
+	if (volume > 0.0f)
 	{
 		char* collisionText = "Rigidbody collision detected!";
 		sutil::displayText(collisionText, 25, height-25);
@@ -503,20 +505,8 @@ void GlutDisplay()
 
 	char* collisionText = "Intersection volume between sphere 1 and sphere 2";
 	sutil::displayText(collisionText, 25, height-45);
-	snprintf(volumeText, sizeof volumeText, "%f", volume01);
+	snprintf(volumeText, sizeof volumeText, "%f", volume);
 	sutil::displayText(volumeText, 25, height-65);
-
-	/*
-	collisionText = "Intersection volume between sphere 1 and box 1";
-	sutil::displayText(collisionText, 25, height-85);
-	snprintf(volumeText, sizeof volumeText, "%f", volume02);
-	sutil::displayText(volumeText, 25, height-105);
-
-	collisionText = "Intersection volume between sphere 2 and box 1";
-	sutil::displayText(collisionText, 25, height-125);
-	snprintf(volumeText, sizeof volumeText, "%f", volume12);
-	sutil::displayText(volumeText, 25, height-145);
-	*/
 
 	// Display frames per second
 	sutil::displayFps(frame_count++);
@@ -524,24 +514,30 @@ void GlutDisplay()
 	glutSwapBuffers();
 
 	// Resolve collisions
-	float k = 0.001f;
-	if (volume01 > 0.0f)
+	float k = 10.0f;
+	float forceTotal = 0.0f;
+	if (volume > 0.0f)
 	{
 		// Iterate over volume buffer again and apply forces on the bodies
 		// (Soft constraint)
-		float forceCoefficient = 0.5f * k * volume01;
+		float forceCoefficient = 0.5f * k * volume / intersectionPixels;
 		for(uint i = 0; i < width*height; i++)
 		{
 			if (responseData[i].volume > 0.0f)
 			{
 				IntersectionResponse response = responseData[i];
+				forceTotal += GetMagnitude(-response.entryNormal * forceCoefficient);
+				forceTotal += GetMagnitude(-response.exitNormal * forceCoefficient);
 				sceneRigidBodies[response.entryId].AddForceAtRelativePosition(-response.entryNormal * forceCoefficient, response.entryPoint);
 				sceneRigidBodies[response.exitId].AddForceAtRelativePosition(-response.exitNormal * forceCoefficient, response.exitPoint);
 			}
 		}
 	}
+	if (forceTotal > 0.0f)
+	{
+		std::cout << forceTotal << std::endl;
+	}
 }
-
 
 void GlutKeyboardPress(unsigned char k, int x, int y)
 {
