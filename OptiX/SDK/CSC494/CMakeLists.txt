@@ -34,16 +34,19 @@ OPTIX_add_sample_executable( CSC494
 
   # Source file
   CSC494.cpp
+  GeometryCreator.cpp
+  RigidBody.cpp
 
   # Headers
-  commonStructs.h
   random.h
   tutorial.h
+  BufferStructs.h
+  GeometryCreator.h
+  RigidBody.h
 
   # Cuda Files
   ray_scene.cu
   sphere_model.cu
   box.cu
   parallelogram.cu
-  tutorial0.cu
 )

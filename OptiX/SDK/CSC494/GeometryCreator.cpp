@@ -4,7 +4,7 @@
 
 #include <sutil.h>
 
-#include "GeomteryCreator.h"
+#include "GeometryCreator.h"
 
 using namespace optix;
 

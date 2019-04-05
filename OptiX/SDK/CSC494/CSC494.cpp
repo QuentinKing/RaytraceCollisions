@@ -21,7 +21,7 @@
 #include "random.h"
 #include <Arcball.h>
 #include "RigidBody.h"
-#include "GeomteryCreator.h"
+#include "GeometryCreator.h"
 #include "BufferStructs.h"
 
 using namespace optix;
