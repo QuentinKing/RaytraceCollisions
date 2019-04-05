@@ -3,6 +3,7 @@
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include <sutil.h>
+#include <OptiXMesh.h>
 
 #include "GeometryCreator.h"
 
@@ -114,4 +115,37 @@ GeometryInstance GeometryCreator::CreatePlane(float3 anchor, float3 v1, float3 v
 	plane_matl["specularPower"]->setFloat( 1.0f );
 
 	return context->createGeometryInstance(parallelogram, &plane_matl, &plane_matl + 1);
+}
+
+GeometryInstance GeometryCreator::CreateMesh(std::string meshFilePath)
+{
+	const char* ptx = sutil::getPtxString(projectPrefix, "triangle_mesh.cu");
+
+	// Override default programs with our own
+	Program intersection = context->createProgramFromPTXString(ptx, "mesh_intersect_refine");
+	Program bounds = context->createProgramFromPTXString(ptx, "mesh_bounds");
+
+	OptiXMesh mesh;
+    mesh.context = context;
+    mesh.intersection = intersection;
+    mesh.bounds = bounds;
+
+	Material mesh_matl = context->createMaterial();
+	Program mesh_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_mesh");
+	Program mesh_ah = context->createProgramFromPTXString(scenePtx, "any_hit_static");
+	mesh_matl->setClosestHitProgram(0, mesh_ch);
+	mesh_matl->setAnyHitProgram(0, mesh_ah);
+
+	mesh_matl["ambientColorIntensity"]->setFloat( 0.8f, 0.3f, 0.2f );
+    mesh_matl["diffuseColorIntensity"]->setFloat( 0.3f, 0.2f, 0.8f );
+	mesh_matl["specularColorIntensity"]->setFloat( 0.3f, 0.8f, 0.2f );
+	mesh_matl["specularPower"]->setFloat( 8.0f );
+
+    mesh.material = mesh_matl;
+
+	Matrix4x4 xform = Matrix4x4::identity();
+	xform *= 40.0f;
+	loadMesh(meshFilePath, mesh, xform);
+
+	return mesh.geom_instance;
 }

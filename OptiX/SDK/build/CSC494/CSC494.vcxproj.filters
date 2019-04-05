@@ -18,6 +18,9 @@
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\intersection_refinement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\BufferStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,6 +45,9 @@
       <Filter>CUDA Files</Filter>
     </None>
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\parallelogram.cu">
+      <Filter>CUDA Files</Filter>
+    </None>
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\triangle_mesh.cu">
       <Filter>CUDA Files</Filter>
     </None>
   </ItemGroup>

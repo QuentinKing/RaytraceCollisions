@@ -229,32 +229,23 @@ void CreateScene()
 	// Create root scene group
 	Group sceneGroup = context->createGroup();
 
-	// Create floor (not a rigidbody)
-	/*
-	GeometryInstance planeInstance = geometryCreator.CreatePlane(make_float3(-64.0f, 0.0f, -64.0f),
-		make_float3(128.0f, 0.0f, 0.0f),
-		make_float3(0.0f, 0.0f, 128.0f));
-	staticGeometry.push_back(planeInstance);
-	*/
-
-	// Create rigidbody spheres
+	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
 	RigidBody rigidBody(context, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	/*
-	sphereInstance = geometryCreator.CreateSphere(3.0f);
-	rigidBody = RigidBody(context, sphereInstance, 1, make_float3(0.0f, 5.0, -4.0f), 1.0f, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
-	sceneRigidBodies.push_back(rigidBody);
-	*/
-
-
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
 	rigidBody = RigidBody(context, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
 	sceneRigidBodies.push_back(rigidBody);
+
+	/*
+	 * Testing
+	 */
+	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj");
+	staticGeometry.push_back(mesh);
+	//
 
 	// Create static geometry group
 	staticGroup->setChildCount(static_cast<unsigned int>(staticGeometry.size()));
@@ -262,7 +253,7 @@ void CreateScene()
 	{
 		staticGroup->setChild(i, staticGeometry[i]);
 	}
-	staticGroup->setAcceleration(context->createAcceleration("NoAccel"));
+	staticGroup->setAcceleration(context->createAcceleration("Trbvh"));
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size() + 1); // +1 for static geometry
@@ -316,7 +307,7 @@ void CreateLights()
 {
 	Light lights[] =
 	{
-        { make_float3( 0.0f, 20.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
+        { make_float3( 20.0f, 20.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
     };
 
     Buffer light_buffer = context->createBuffer( RT_BUFFER_INPUT );

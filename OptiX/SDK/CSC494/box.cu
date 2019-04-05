@@ -46,8 +46,6 @@ rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 // Rigidbody specific variables
 rtDeclareVariable(float, id, , );
-rtDeclareVariable(float, velocity, , );
-rtDeclareVariable(float, torque, , );
 
 // Shading variables (Technically not required, but usually used on all materials)
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, );

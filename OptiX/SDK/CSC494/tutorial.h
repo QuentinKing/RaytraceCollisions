@@ -34,6 +34,7 @@ struct PerRayData_radiance
 	float  importance;
 	int depth;
 
+	bool hitObject;
 	int numIntersections;
 	IntersectionData intersections[INTERSECTION_SAMPLES];
 	float closestTval; // The z-depth of the closest object in the scene

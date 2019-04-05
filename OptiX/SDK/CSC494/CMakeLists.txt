@@ -40,6 +40,7 @@ OPTIX_add_sample_executable( CSC494
   # Headers
   random.h
   tutorial.h
+  intersection_refinement.h
   BufferStructs.h
   GeometryCreator.h
   RigidBody.h
@@ -49,4 +50,5 @@ OPTIX_add_sample_executable( CSC494
   sphere_model.cu
   box.cu
   parallelogram.cu
+  triangle_mesh.cu
 )

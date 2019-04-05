@@ -60,6 +60,7 @@ rtBuffer<RigidbodyMotion> rigidbodyMotions;
 
 // Volumetric variables
 rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
+rtDeclareVariable(float, staticTVal, attribute staticTVal, );
 rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 
 // Shading values
@@ -142,42 +143,6 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 // Camera functions
 //
 
-// Perspective camera
-RT_PROGRAM void perspective_camera()
-{
-	ClearResponseBuffer();
-
-	size_t2 screen = output_buffer.size();
-
-	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
-	float3 ray_origin = eye;
-	float3 ray_direction = normalize(d.x*U + d.y*V + W);
-
-	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
-
-	PerRayData_radiance prd;
-	prd.importance = 1.f;
-	prd.depth = 0;
-	prd.numIntersections = 0;
-	prd.closestTval = 999999.0f;
-
-	rtTrace(top_object, ray, prd);
-
-	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
-	if (prd.numIntersections > 0)
-	{
-		// Check for intersections (and fill in the intersection buffer)
-		CheckIntersectionOverlap(prd, ray_origin, ray_direction);
-
-		// Shade the object with the properties we saved while raycasting
-		output_buffer[launch_index] = make_color(prd.result);
-	}
-	else
-	{
-		output_buffer[launch_index] = make_color(prd.missColor);
-	}
-}
-
 // Orthographic camera (easier calculations for intersection volumes)
 RT_PROGRAM void orthographic_camera()
 {
@@ -195,12 +160,13 @@ RT_PROGRAM void orthographic_camera()
 	prd.importance = 1.f;
 	prd.depth = 0;
 	prd.numIntersections = 0;
+	prd.hitObject = false;
 	prd.closestTval = 999999.0f;
 
 	rtTrace(top_object, ray, prd);
 
 	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
-	if (prd.numIntersections > 0)
+	if (prd.hitObject)
 	{
 		// Check for intersections (and fill in the intersection buffer)
 		CheckIntersectionOverlap(prd, ray_origin, ray_direction);
@@ -231,6 +197,8 @@ RT_PROGRAM void miss()
 // Any hit program, store depth value and potential shading properties
 RT_PROGRAM void any_hit()
 {
+	prd_radiance.hitObject = true;
+
 	// Record our intersection values
 	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
 	{
@@ -247,6 +215,13 @@ RT_PROGRAM void any_hit()
 
 	if (ignore_intersection)
 		rtIgnoreIntersection();
+}
+
+RT_PROGRAM void any_hit_static()
+{
+	// Record our intersection values
+	prd_radiance.hitObject = true;
+	prd_radiance.closestTval = min(prd_radiance.closestTval, staticTVal);
 }
 
 // Closest hit shading for the spheres
@@ -367,6 +342,59 @@ RT_PROGRAM void closest_hit_radiance_plane()
 RT_PROGRAM void closest_hit_radiance_box()
 {
 	float3 world_geo_normal = normalize(rtTransformNormal(
+										RT_OBJECT_TO_WORLD,
+										geometric_normal));
+
+	float3 world_shade_normal = normalize(rtTransformNormal(
+											RT_OBJECT_TO_WORLD,
+											shading_normal));
+
+	// Handles back face rendering
+	float3 ffnormal = faceforward(world_shade_normal,
+									-ray.direction,
+									world_geo_normal);
+
+	float3 color = ambientColorIntensity * ambientLightColor;
+ 
+	float3 hit_point = ray.origin + closestHitDist * ray.direction;
+
+	// Phong diffuse shading
+	for(int i = 0; i < lights.size(); ++i) 
+	{
+		Light light = lights[i];
+		float3 L = normalize(light.pos - hit_point);
+		float nDl = __saturatef(dot( ffnormal, L));
+		
+		if( nDl > 0 )
+		{
+			// Cast a shadow ray
+			PerRayData_shadow shadow_prd;
+			shadow_prd.attenuation = 1.0f;
+			float Ldist = length(light.pos - hit_point);
+			optix::Ray shadow_ray(hit_point, L, shadow_ray_type, scene_epsilon, Ldist );
+			rtTrace(top_shadower, shadow_ray, shadow_prd);
+			float light_attenuation = shadow_prd.attenuation;
+
+			if (light_attenuation > 0.0f)
+			{
+				float3 Lc = light.color * light_attenuation;
+				color += diffuseColorIntensity * nDl * Lc;
+
+				float3 H = normalize(L - ray.direction); // half way vector
+				float nDh = dot(ffnormal, H);
+				if (nDh > 0)
+					color += specularColorIntensity * Lc * pow(nDh, specularPower);
+			}
+		}
+	}
+
+	prd_radiance.result = color;
+}
+
+// Closest hit shading for a mesh
+RT_PROGRAM void closest_hit_radiance_mesh()
+{
+		float3 world_geo_normal = normalize(rtTransformNormal(
 										RT_OBJECT_TO_WORLD,
 										geometric_normal));
 

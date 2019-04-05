@@ -328,6 +328,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.cpp" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h" />
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\intersection_refinement.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\BufferStructs.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.h" />
@@ -335,6 +336,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\sphere_model.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\parallelogram.cu" />
+    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\triangle_mesh.cu" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\build\ZERO_CHECK.vcxproj">

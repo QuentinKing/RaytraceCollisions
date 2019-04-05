@@ -23,9 +23,8 @@ public:
 
 	GeometryInstance CreateSphere(float radius);
 	GeometryInstance CreateBox(float3 axisLengths);
-
 	GeometryInstance CreatePlane(float3 anchor, float3 v1, float3 v2);
-
+	GeometryInstance CreateMesh(std::string meshFilePath);
 
 private:
 	Context context;
