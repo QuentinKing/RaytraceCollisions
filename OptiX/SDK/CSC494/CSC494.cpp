@@ -26,12 +26,9 @@
 
 using namespace optix;
 
-//------------------------------------------------------------------------------
-//
-// Globals
-//
-//------------------------------------------------------------------------------
-
+/*
+ * Globals
+ */
 const char* const PROJECT_NAME = "CSC494";
 const char* const SCENE_NAME = "ray_scene.cu";
 
@@ -48,22 +45,6 @@ const char*  scene_ptx;
 // Geometry
 std::vector<RigidBody> sceneRigidBodies;
 
-// Camera setup
-enum CameraType
-{
-	Perspective = 0,
-	Orthographic = 1
-};
-const CameraType cameraType = CameraType::Orthographic;
-
-// Buffer to render
-enum RenderBuffer
-{
-	ShadedOutput = 0,
-	IntersectionVolume = 1
-};
-RenderBuffer curRenderBuffer = RenderBuffer::ShadedOutput;
-
 // Camera state
 float3       camera_up;
 float3       camera_lookat;
@@ -76,15 +57,12 @@ int2       mouse_prev_pos;
 int        mouse_button;
 
 
-//------------------------------------------------------------------------------
-//
-// Forward declarations
-//
-//------------------------------------------------------------------------------
-
+/*
+ * Forward declarations
+ */
 Buffer GetOutputBuffer();
-Buffer GetVolumeVisualBuffer();
 Buffer GetRigidbodyMotionBuffer();
+Buffer GetResponseBuffer();
 
 void DestroyContext();
 void RegisterExitHandler();
@@ -106,22 +84,11 @@ void GlutMousePress(int button, int state, int x, int y);
 void GlutMouseMotion(int x, int y);
 void GlutResize(int w, int h);
 
-//------------------------------------------------------------------------------
-//
-//  Helper functions
-//
-//------------------------------------------------------------------------------
 
 Buffer GetOutputBuffer()
 {
 	return context["output_buffer"]->getBuffer();
 }
-
-Buffer GetVolumeVisualBuffer()
-{
-	return context["volume_visual_buffer"]->getBuffer();
-}
-
 
 Buffer GetRigidbodyMotionBuffer()
 {
@@ -133,26 +100,16 @@ Buffer GetResponseBuffer()
 	return context["collisionResponse"]->getBuffer();
 }
 
-void DestroyContext()
-{
-	if (context)
-	{
-		context->destroy();
-		context = 0;
-	}
-}
-
-
 void RegisterExitHandler()
 {
-	// register shutdown handler
 #ifdef _WIN32
-	glutCloseFunc(DestroyContext);  // this function is freeglut-only
+	glutCloseFunc(DestroyContext);
 #else
 	atexit(destroyContext);
 #endif
 }
 
+// TODO: move this to a like a math class or something
 float GetMagnitude(float3 vector)
 {
 	return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
@@ -161,21 +118,16 @@ float GetMagnitude(float3 vector)
 
 void CreateContext()
 {
-	// Set up context
 	context = Context::create();
-	context->setRayTypeCount(2);	// The number of types of rays (shading, shadowing)
-	context->setEntryPointCount(1); // Entry points, one for each ray generation algorithm (used for multipass rendering)
-	context->setStackSize(4640);	// Allocated stack for each thread of execution
+	context->setRayTypeCount(2);				// The number of types of rays (shading, shadowing)
+	context->setEntryPointCount(1);				// Entry points, one for each ray generation algorithm (used for multipass rendering)
+	context->setStackSize(4640);				// Allocated stack for each thread of execution
 
-	// Note: high max depth for reflection and refraction through glass
-	context["max_depth"]->setInt(100);
-	context["scene_epsilon"]->setFloat(1.e-4f);
+	context["scene_epsilon"]->setFloat(1.e-4f); // Min distance to check along the ray
+	context["radiance_ray_type"]->setUint(0);	// Index of the radiance ray
+    context["shadow_ray_type"]->setUint(1);		// Index of the shadow ray
 
-	// Ray types
-	context["radiance_ray_type"]->setUint( 0 );
-    context["shadow_ray_type"]->setUint( 1 );
-
-	last_update_time = sutil::currentTime();
+	last_update_time = sutil::currentTime();	// Initialize time
 
 	// Output buffers
 	GLuint vbo = 0;
@@ -187,28 +139,12 @@ void CreateContext()
 	Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, width, height, use_pbo);
 	context["output_buffer"]->set(buffer);
 
-	Buffer volume_visual_buffer = context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height);
-	context["volume_visual_buffer"]->set(volume_visual_buffer);
-
-	// Determine what type of camera we are using
-	std::string camera_name;
-	switch (cameraType)
-	{
-	case CameraType::Perspective :
-		camera_name = "perspective_camera";
-		break;
-	case CameraType::Orthographic :
-		camera_name = "orthographic_camera";
-		break;
-	}
-
 	// Ray generation program
-	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx, camera_name);
+	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx,"orthographic_camera");
 	context->setRayGenerationProgram(0, ray_gen_program);
 
 	// Miss program
-	const std::string miss_name = "miss";
-	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, miss_name));
+	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, "miss"));
 	context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
 
 	// Exception program
@@ -217,6 +153,14 @@ void CreateContext()
 	context["bad_color"]->setFloat(1.0f, 0.0f, 0.80f);
 }
 
+void DestroyContext()
+{
+	if (context)
+	{
+		context->destroy();
+		context = 0;
+	}
+}
 
 void CreateScene()
 {
@@ -485,17 +429,8 @@ void GlutDisplay()
 	context->launch(0, width, height);
 
 	Buffer renderBuffer = GetOutputBuffer();
-	Buffer volumeVisualBuffer = GetVolumeVisualBuffer();
 	Buffer responseBuffer = GetResponseBuffer();
-	switch (curRenderBuffer)
-	{
-	case RenderBuffer::ShadedOutput:
-		sutil::displayBufferGL(renderBuffer);
-		break;
-	case RenderBuffer::IntersectionVolume:
-		sutil::displayBufferGL(volumeVisualBuffer);
-		break;
-	}
+	sutil::displayBufferGL(renderBuffer);
 
 	// Volume of all three potential collisions
 	float volume = 0.0f;
@@ -533,7 +468,7 @@ void DisplayGUI(float volume)
 		sutil::displayText(collisionText, 25, height-25);
 	}
 
-	char* collisionText = "Intersection volume between sphere 1 and sphere 2";
+	char* collisionText = "Intersection volume";
 	sutil::displayText(collisionText, 25, height-45);
 	snprintf(volumeText, sizeof volumeText, "%f", volume);
 	sutil::displayText(volumeText, 25, height-65);
@@ -560,16 +495,6 @@ void GlutKeyboardPress(unsigned char k, int x, int y)
 			sutil::displayBufferPPM(outputImage.c_str(), GetOutputBuffer());
 			break;
 		}
-		case('v'):
-		{
-			curRenderBuffer = RenderBuffer::ShadedOutput;
-			break;
-		}
-		case('b'):
-		{
-			curRenderBuffer = RenderBuffer::IntersectionVolume;
-			break;
-		}
 	}
 }
 
@@ -580,10 +505,6 @@ void GlutMousePress(int button, int state, int x, int y)
 	{
 		mouse_button = button;
 		mouse_prev_pos = make_int2(x, y);
-	}
-	else
-	{
-		// nothing
 	}
 }
 

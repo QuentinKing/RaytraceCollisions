@@ -51,7 +51,6 @@ rtDeclareVariable(float2, orthoCameraSize, , );
 
 // Output buffers
 rtBuffer<uchar4, 2>								 output_buffer;
-rtBuffer<uchar4, 2>								 volume_visual_buffer;
 rtBuffer<IntersectionResponse, 2>				 collisionResponse;
 
 // Rigidbody variables
@@ -134,8 +133,6 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 			total += volume;
 		}
 	}
-	float col = total * screen.x * screen.y * 0.0002f; // Compute a relevant color value for the buffer
-	volume_visual_buffer[launch_index] = make_color(make_float3(col, 0, 0));
 }
 
 
@@ -165,7 +162,6 @@ RT_PROGRAM void orthographic_camera()
 
 	rtTrace(top_object, ray, prd);
 
-	volume_visual_buffer[launch_index] = make_color(make_float3(0, 0, 0));
 	if (prd.hitObject)
 	{
 		// Check for intersections (and fill in the intersection buffer)
