@@ -55,6 +55,9 @@ rtBuffer<IntersectionResponse, 2>				 collisionResponse;
 
 // Rigidbody variables
 rtDeclareVariable(int, numRigidbodies, , );
+rtDeclareVariable(int, physicsRayStep, , );
+rtDeclareVariable(int, physicsBufferWidth, , );
+rtDeclareVariable(int, physicsBufferHeight, , );
 rtBuffer<RigidbodyMotion> rigidbodyMotions; 
 
 // Volumetric variables
@@ -89,7 +92,7 @@ void ClearResponseBuffer()
 	data.exitNormal = make_float3(0.0f,0.0f,0.0f);
 	data.entryPoint = make_float3(0.0f,0.0f,0.0f);
 	data.exitPoint = make_float3(0.0f,0.0f,0.0f);
-	collisionResponse[launch_index] = data;
+	collisionResponse[make_uint2(launch_index.x / physicsRayStep, launch_index.y / physicsRayStep)] = data;
 }
 
 // Checks given a list of entry and exit points if any of them overlap
@@ -97,7 +100,7 @@ void ClearResponseBuffer()
 void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3 ray_direction)
 {
 	float2 screen = make_float2(output_buffer.size());
-	float2 pixelSize = orthoCameraSize * 2.0 / screen;
+	float2 pixelSize = orthoCameraSize * 2.0 / (make_float2(physicsBufferWidth, physicsBufferHeight));
 	float total = 0.0f;
 
 	for (int i = 0; i < prd.numIntersections; i++)
@@ -113,13 +116,6 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 			int exitIndex = min(firstInterval.y, secondInterval.y) == firstInterval.y ? i : j;
 			float volume = intersection * pixelSize.x * pixelSize.y;
 
-			// Write to collision response buffer
-			/*
-			int d1 = min(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
-			int d2 = max(prd.intersections[i].rigidBodyId, prd.intersections[j].rigidBodyId);
-			int pairIndex = (d1 * (numRigidbodies - 1)) + (d2 - 1) - (d1*(d1 + 1) / 2);
-			*/
-
 			IntersectionResponse data;
 			data.volume = volume;
 			data.entryId = prd.intersections[entryIndex].rigidBodyId;
@@ -128,7 +124,7 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 			data.exitNormal = prd.intersections[exitIndex].exitNormal;
 			data.entryPoint = ray_origin + prd.intersections[entryIndex].entryTval * ray_direction;
 			data.exitPoint = ray_origin + prd.intersections[exitIndex].exitTval * ray_direction;
-			collisionResponse[launch_index] = data;
+			collisionResponse[make_uint2(launch_index.x / physicsRayStep, launch_index.y / physicsRayStep)] = data;
 
 			total += volume;
 		}
@@ -143,7 +139,11 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 // Orthographic camera (easier calculations for intersection volumes)
 RT_PROGRAM void orthographic_camera()
 {
-	ClearResponseBuffer();
+	// Determine if we are going to use this ray for volume intersections
+	bool isPhysicsRay = (launch_index.x % physicsRayStep == 0 && launch_index.y % physicsRayStep == 0);
+
+	if (isPhysicsRay)
+		ClearResponseBuffer();
 
 	size_t2 screen = output_buffer.size();
 
@@ -165,7 +165,8 @@ RT_PROGRAM void orthographic_camera()
 	if (prd.hitObject)
 	{
 		// Check for intersections (and fill in the intersection buffer)
-		CheckIntersectionOverlap(prd, ray_origin, ray_direction);
+		if (isPhysicsRay)
+			CheckIntersectionOverlap(prd, ray_origin, ray_direction);
 
 		// Shade the object with the properties we saved while raycasting
 		// This is essentially the closest hit shader

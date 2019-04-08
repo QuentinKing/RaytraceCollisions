@@ -36,10 +36,15 @@ const char* const SCENE_NAME = "ray_scene.cu";
 
 Context      context;
 uint32_t     width = 1080u;
-uint32_t     height = 720;
+uint32_t     height = 720u;
 bool         use_pbo = true;
 unsigned	 frame_count = 0;
 double		 last_update_time = 0;
+
+// This controls how many rays are used for volume detection.
+// The higher the number, the lower the resolution is for the collision buffer but
+// the performance of the program will increase
+uint32_t	 physicsRayStep = 2;
 
 const char*  scene_ptx;
 
@@ -241,8 +246,14 @@ void Scene::CreateScene()
 	Buffer response_buffer = context->createBuffer( RT_BUFFER_INPUT_OUTPUT );
     response_buffer->setFormat( RT_FORMAT_USER );
     response_buffer->setElementSize( sizeof( IntersectionResponse ) );
-    response_buffer->setSize(width, height);
 
+	uint32_t physicsBufferWidth = width / physicsRayStep;
+	uint32_t physicsBufferHeight = height / physicsRayStep;
+    response_buffer->setSize(physicsBufferWidth, physicsBufferHeight);
+
+	context["physicsRayStep"]->setInt(physicsRayStep);
+	context["physicsBufferWidth"]->setInt(physicsBufferWidth);
+	context["physicsBufferHeight"]->setInt(physicsBufferHeight);
 	context["collisionResponse"]->set(response_buffer);
 }
 
@@ -323,7 +334,6 @@ void Scene::UpdateCamera()
 		normalize(-camera_w),
 		camera_lookat);
 	const Matrix4x4 frame_inv = frame.inverse();
-	// Apply camera rotation twice to match old SDK behavior
 	const Matrix4x4 trans = frame * camera_rotate*camera_rotate*frame_inv;
 
 	camera_eye = make_float3(trans*make_float4(camera_eye, 1.0f));
@@ -354,7 +364,8 @@ void Scene::ResolveCollisions(float volume, int intersectionPixels, Intersection
 		// Iterate over volume buffer again and apply forces on the bodies
 		// (Soft constraint)
 		float forceCoefficient = 0.2f * k * volume / intersectionPixels;
-		for(uint i = 0; i < width*height; i++)
+		int physicsPixels = width * height / physicsRayStep / physicsRayStep;
+		for(uint i = 0; i < physicsPixels; i++)
 		{
 			if (responseData[i].volume > 0.0f)
 			{
@@ -454,7 +465,8 @@ void Scene::GlutDisplay()
 	int intersectionPixels = 0; // Number of pixels that registered an intersection
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
-	for(uint i = 0; i < width*height; i++)
+	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
+	for(uint i = 0; i < physicsPixels; i++)
 	{
 		volume += responseData[i].volume;
 		if (responseData[i].volume > 0.0f)
