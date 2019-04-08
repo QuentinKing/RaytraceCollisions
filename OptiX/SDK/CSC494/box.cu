@@ -31,7 +31,7 @@
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
 
-#include "tutorial.h"
+#include "RayStructs.h"
 
 using namespace optix;
 

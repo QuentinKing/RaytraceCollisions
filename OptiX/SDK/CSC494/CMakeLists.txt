@@ -39,9 +39,8 @@ OPTIX_add_sample_executable( CSC494
   RigidBody.cpp
 
   # Headers
-  random.h
-  tutorial.h
-  intersection_refinement.h
+  RayStructs.h
+  IntersectionRefinement.h
   BufferStructs.h
   GeometryCreator.h
   RigidBody.h

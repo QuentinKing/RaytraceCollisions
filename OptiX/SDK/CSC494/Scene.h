@@ -20,7 +20,6 @@
 
 // User created headers / includes
 #include <sutil.h>
-#include "random.h"
 #include <Arcball.h>
 #include "RigidBody.h"
 #include "GeometryCreator.h"

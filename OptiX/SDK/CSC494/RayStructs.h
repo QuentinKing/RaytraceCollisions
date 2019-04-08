@@ -15,7 +15,6 @@ static __device__ __inline__ uchar4 make_color(const float3& c)
 		255u);                                                 /* A */
 }
 
-
 struct IntersectionData
 {
 	uint rigidBodyId;

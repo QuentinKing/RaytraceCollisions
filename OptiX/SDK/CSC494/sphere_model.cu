@@ -27,7 +27,7 @@
  */
 
 #include <optix_world.h>
-#include "tutorial.h"
+#include "RayStructs.h"
 
 using namespace optix;
 

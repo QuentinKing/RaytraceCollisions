@@ -15,13 +15,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h">
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RayStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\tutorial.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\intersection_refinement.h">
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\IntersectionRefinement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\BufferStructs.h">

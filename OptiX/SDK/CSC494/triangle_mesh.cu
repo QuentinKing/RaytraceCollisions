@@ -30,10 +30,10 @@
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
 #include <optixu/optixu_aabb_namespace.h>
-#include "intersection_refinement.h"
+#include "IntersectionRefinement.h"
 
 #include <optix_world.h>
-#include "tutorial.h"
+#include "RayStructs.h"
 
 using namespace optix;
 
