@@ -79,6 +79,40 @@ float Scene::GetMagnitude(float3 vector)
 }
 
 
+void Scene::Setup(int argc, char** argv, std::string out_file, bool use_pbo)
+{
+	try
+	{
+		GlutInitialize(&argc, argv);
+
+#ifndef __APPLE__
+		glewInit();
+#endif
+
+		// Load PTX source
+		scene_ptx = sutil::getPtxString(PROJECT_NAME, SCENE_NAME);
+
+		CreateContext();
+		CreateScene();
+		SetupCamera();
+
+		context->validate();
+
+		if (out_file.empty())
+		{
+			GlutRun();
+		}
+		else
+		{
+			UpdateCamera();
+			context->launch(0, width, height);
+			sutil::displayBufferPPM(out_file.c_str(), GetOutputBuffer());
+			DestroyContext();
+		}
+	}
+	SUTIL_CATCH(context->get())
+}
+
 void Scene::CreateContext()
 {
 	context = Context::create();
@@ -338,6 +372,30 @@ void Scene::ResolveCollisions(float volume, int intersectionPixels, Intersection
 	}
 }
 
+/*
+	Glut stuff
+*/
+
+void Scene::DisplayGUI(float volume)
+{
+	// Display intersection volume
+	char volumeText[64];
+
+	// Display collision detection
+	if (volume > 0.0f)
+	{
+		char* collisionText = "Rigidbody collision detected!";
+		sutil::displayText(collisionText, 25, height-25);
+	}
+
+	char* collisionText = "Intersection volume";
+	sutil::displayText(collisionText, 25, height-45);
+	snprintf(volumeText, sizeof volumeText, "%f", volume);
+	sutil::displayText(volumeText, 25, height-65);
+
+	// Display frames per second
+	sutil::displayFps(frame_count++);
+}
 
 void Scene::GlutInitialize(int* argc, char** argv)
 {
@@ -348,7 +406,6 @@ void Scene::GlutInitialize(int* argc, char** argv)
 	glutCreateWindow(PROJECT_NAME);
 	glutHideWindow();
 }
-
 
 void Scene::GlutRun()
 {
@@ -376,13 +433,6 @@ void Scene::GlutRun()
 
 	glutMainLoop();
 }
-
-
-//------------------------------------------------------------------------------
-//
-//  GLUT callbacks
-//
-//------------------------------------------------------------------------------
 
 void Scene::GlutDisplay()
 {
@@ -421,27 +471,6 @@ void Scene::GlutDisplay()
 	glutSwapBuffers();
 }
 
-void Scene::DisplayGUI(float volume)
-{
-	// Display intersection volume
-	char volumeText[64];
-
-	// Display collision detection
-	if (volume > 0.0f)
-	{
-		char* collisionText = "Rigidbody collision detected!";
-		sutil::displayText(collisionText, 25, height-25);
-	}
-
-	char* collisionText = "Intersection volume";
-	sutil::displayText(collisionText, 25, height-45);
-	snprintf(volumeText, sizeof volumeText, "%f", volume);
-	sutil::displayText(volumeText, 25, height-65);
-
-	// Display frames per second
-	sutil::displayFps(frame_count++);
-}
-
 void Scene::GlutKeyboardPress(unsigned char k, int x, int y)
 {
 	Scene instance = Scene::Get();
@@ -464,7 +493,6 @@ void Scene::GlutKeyboardPress(unsigned char k, int x, int y)
 	}
 }
 
-
 void Scene::GlutMousePress(int button, int state, int x, int y)
 {
 	if (state == GLUT_DOWN)
@@ -473,7 +501,6 @@ void Scene::GlutMousePress(int button, int state, int x, int y)
 		mouse_prev_pos = make_int2(x, y);
 	}
 }
-
 
 void Scene::GlutMouseMotion(int x, int y)
 {
@@ -503,7 +530,6 @@ void Scene::GlutMouseMotion(int x, int y)
 	mouse_prev_pos = make_int2(x, y);
 }
 
-
 void Scene::GlutResize(int w, int h)
 {
 	Scene instance = Scene::Get();
@@ -519,38 +545,4 @@ void Scene::GlutResize(int w, int h)
 	glViewport(0, 0, width, height);
 
 	glutPostRedisplay();
-}
-
-void Scene::Setup(int argc, char** argv, std::string out_file, bool use_pbo)
-{
-	try
-	{
-		GlutInitialize(&argc, argv);
-
-#ifndef __APPLE__
-		glewInit();
-#endif
-
-		// Load PTX source
-		scene_ptx = sutil::getPtxString(PROJECT_NAME, SCENE_NAME);
-
-		CreateContext();
-		CreateScene();
-		SetupCamera();
-
-		context->validate();
-
-		if (out_file.empty())
-		{
-			GlutRun();
-		}
-		else
-		{
-			UpdateCamera();
-			context->launch(0, width, height);
-			sutil::displayBufferPPM(out_file.c_str(), GetOutputBuffer());
-			DestroyContext();
-		}
-	}
-	SUTIL_CATCH(context->get())
 }
