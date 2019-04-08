@@ -324,6 +324,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\CSC494.cpp" />
+    <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\Scene.cpp" />
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.cpp" />
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.cpp" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\random.h" />
@@ -332,6 +333,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\BufferStructs.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.h" />
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\Scene.h" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\ray_scene.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\sphere_model.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu" />

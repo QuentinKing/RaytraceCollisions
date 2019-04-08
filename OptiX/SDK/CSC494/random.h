@@ -1,3 +1,5 @@
+#pragma once
+
 #include <optixu/optixu_math_namespace.h>
 
 template<unsigned int N>

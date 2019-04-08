@@ -34,6 +34,7 @@ OPTIX_add_sample_executable( CSC494
 
   # Source file
   CSC494.cpp
+  Scene.cpp
   GeometryCreator.cpp
   RigidBody.cpp
 
@@ -44,6 +45,7 @@ OPTIX_add_sample_executable( CSC494
   BufferStructs.h
   GeometryCreator.h
   RigidBody.h
+  Scene.h
 
   # Cuda Files
   ray_scene.cu

@@ -4,6 +4,9 @@
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\CSC494.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -28,6 +31,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
