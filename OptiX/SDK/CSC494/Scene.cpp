@@ -141,12 +141,13 @@ void Scene::CreateContext()
 	context["output_buffer"]->set(buffer);
 
 	// Ray generation program
-	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx,"orthographic_camera");
+	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx, "perspective_camera");
 	context->setRayGenerationProgram(0, ray_gen_program);
 
 	// Miss program
 	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, "miss"));
-	context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
+	const std::string texpath = "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\CedarCity.hdr";
+    context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, make_float3(1.0, 1.0, 1.0)));
 
 	// Exception program
 	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
@@ -350,7 +351,11 @@ void Scene::UpdateCamera()
 	context["V"]->setFloat(camera_v);
 	context["W"]->setFloat(camera_w);
 
-	context["orthoCameraSize"]->setFloat(make_float2(10.0f, 10.0f * ((float)height/width)));
+	float3 ray_direction_1 = normalize(-0.5*camera_u + camera_w);
+	float3 ray_direction_2 = normalize(0.5*camera_u + camera_w);
+	float fov = acos(dot(ray_direction_1, ray_direction_2));
+
+	context["fov"]->setFloat(fov);
 }
 
 void Scene::ResolveCollisions(float volume, int intersectionPixels, IntersectionResponse* responseData)

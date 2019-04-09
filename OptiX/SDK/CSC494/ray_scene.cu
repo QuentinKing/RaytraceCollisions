@@ -47,7 +47,7 @@ rtDeclareVariable(float3, U, , );
 rtDeclareVariable(float3, V, , );
 rtDeclareVariable(float3, W, , );
 rtDeclareVariable(float3, bad_color, , );
-rtDeclareVariable(float2, orthoCameraSize, , );
+rtDeclareVariable(float, fov, , );
 
 // Output buffers
 rtBuffer<uchar4, 2>								 output_buffer;
@@ -80,7 +80,7 @@ rtDeclareVariable(float3, specularColorIntensity, , );
 rtDeclareVariable(float,   specularPower, , );
 
 // Scene values
-rtDeclareVariable(float3, bg_color, , );
+rtTextureSampler<float4, 2> envmap;
 
 void ClearResponseBuffer()
 {
@@ -100,7 +100,6 @@ void ClearResponseBuffer()
 void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3 ray_direction)
 {
 	float2 screen = make_float2(output_buffer.size());
-	float2 pixelSize = orthoCameraSize * 2.0 / (make_float2(physicsBufferWidth, physicsBufferHeight));
 	float total = 0.0f;
 
 	for (int i = 0; i < prd.numIntersections; i++)
@@ -114,7 +113,14 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 			float intersection = max(0.0f, min(firstInterval.y, secondInterval.y) - max(firstInterval.x, secondInterval.x));
 			int entryIndex = max(firstInterval.x, secondInterval.x) == firstInterval.x ? i : j;
 			int exitIndex = min(firstInterval.y, secondInterval.y) == firstInterval.y ? i : j;
-			float volume = intersection * pixelSize.x * pixelSize.y;
+
+			float fovDelta = 1.0 / screen.x;
+			float theta = fov * fovDelta;
+			float phi = 90.0 - theta;
+			float a = sin(theta) * prd.intersections[entryIndex].entryTval / sin(phi);
+			float b = sin(theta) * prd.intersections[exitIndex].exitTval / sin(phi);
+			float h = intersection;
+			float volume = 0.33 * (a*a + a * b + b * b) * h;
 
 			IntersectionResponse data;
 			data.volume = volume;
@@ -131,13 +137,7 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 	}
 }
 
-
-//
-// Camera functions
-//
-
-// Orthographic camera (easier calculations for intersection volumes)
-RT_PROGRAM void orthographic_camera()
+RT_PROGRAM void perspective_camera()
 {
 	// Determine if we are going to use this ray for volume intersections
 	bool isPhysicsRay = (launch_index.x % physicsRayStep == 0 && launch_index.y % physicsRayStep == 0);
@@ -148,8 +148,8 @@ RT_PROGRAM void orthographic_camera()
 	size_t2 screen = output_buffer.size();
 
 	float2 d = make_float2(launch_index) / make_float2(screen) * 2.f - 1.f;
-	float3 ray_origin = eye + d.x*normalize(U)*orthoCameraSize.x + d.y*normalize(V)*orthoCameraSize.y;
-	float3 ray_direction = normalize(W);
+	float3 ray_origin = eye;
+	float3 ray_direction = normalize(d.x*U + d.y*V + W);
 
 	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
 
@@ -178,7 +178,6 @@ RT_PROGRAM void orthographic_camera()
 	}
 }
 
-
 //
 // Raytrace functions
 //
@@ -187,7 +186,10 @@ RT_PROGRAM void orthographic_camera()
 // along our ray were recorded
 RT_PROGRAM void miss()
 {
-	prd_radiance.missColor = bg_color;
+	float3 point = normalize(ray.direction);
+	float u = atan2(point.x, point.z) / (2.0 * M_PIf) + 0.5;
+	float v = point.y * 0.5 + 0.5;
+	prd_radiance.missColor = make_float3(tex2D(envmap, u, v));
 }
 
 
