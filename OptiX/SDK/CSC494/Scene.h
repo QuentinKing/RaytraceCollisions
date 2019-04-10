@@ -52,7 +52,7 @@ private:
 	void UpdateGeometry();
 	void UpdateRigidbodyState();
 	void UpdateCamera();
-	void ResolveCollisions(float volume, int intersectionPixels, IntersectionResponse* responseData);
+	void ResolveCollisions();
 	void DisplayGUI(float volume);
 
 	float GetMagnitude(float3 vector);

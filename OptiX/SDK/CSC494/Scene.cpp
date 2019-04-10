@@ -358,33 +358,28 @@ void Scene::UpdateCamera()
 	context["fov"]->setFloat(fov);
 }
 
-void Scene::ResolveCollisions(float volume, int intersectionPixels, IntersectionResponse* responseData)
+void Scene::ResolveCollisions()
 {
-	// Resolve collisions
-	float k = 10.0f;
-	float forceTotal = 0.0f;
-	if (volume > 0.0f)
+	Buffer responseBuffer = GetResponseBuffer();
+	float volume = 0.0f;
+	float k = 0.25f;
+
+	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
+	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
+	for(uint i = 0; i < physicsPixels; i++)
 	{
-		// Iterate over volume buffer again and apply forces on the bodies
-		// (Soft constraint)
-		float forceCoefficient = 0.2f * k * volume / intersectionPixels;
-		int physicsPixels = width * height / physicsRayStep / physicsRayStep;
-		for(uint i = 0; i < physicsPixels; i++)
+		IntersectionResponse response = responseData[i];
+		if (responseData[i].volume > 0.0f)
 		{
-			if (responseData[i].volume > 0.0f)
-			{
-				IntersectionResponse response = responseData[i];
-				forceTotal += GetMagnitude(-response.entryNormal * forceCoefficient);
-				forceTotal += GetMagnitude(-response.exitNormal * forceCoefficient);
-				sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * forceCoefficient, response.entryPoint);
-				sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * forceCoefficient, response.exitPoint);
-			}
+			float volumeConstraint = sqrt(response.volume);
+			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k, response.entryPoint);
+			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k, response.exitPoint);
+			volume += response.volume;
 		}
 	}
-	if (forceTotal > 0.0f)
-	{
-		std::cout << forceTotal << std::endl;
-	}
+	responseBuffer->unmap();
+
+	DisplayGUI(volume);
 }
 
 /*
@@ -410,6 +405,11 @@ void Scene::DisplayGUI(float volume)
 
 	// Display frames per second
 	sutil::displayFps(frame_count++);
+
+	if (volume > 0.0f)
+	{
+		std::cout << volume << std::endl;
+	}
 }
 
 void Scene::GlutInitialize(int* argc, char** argv)
@@ -459,30 +459,9 @@ void Scene::GlutDisplay()
 	instance.context->launch(0, width, height);
 
 	Buffer renderBuffer = instance.GetOutputBuffer();
-	Buffer responseBuffer = instance.GetResponseBuffer();
 	sutil::displayBufferGL(renderBuffer);
 
-	// Volume of all three potential collisions
-	float volume = 0.0f;
-
-	int numRigidbodies = sceneRigidBodies.size();
-	int intersectionPixels = 0; // Number of pixels that registered an intersection
-
-	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
-	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
-	for(uint i = 0; i < physicsPixels; i++)
-	{
-		volume += responseData[i].volume;
-		if (responseData[i].volume > 0.0f)
-		{
-			intersectionPixels++;
-		}
-	}
-	responseBuffer->unmap();
-
-	instance.DisplayGUI(volume);
-
-	instance.ResolveCollisions(volume, intersectionPixels, responseData);
+	instance.ResolveCollisions();
 
 	glutSwapBuffers();
 }
