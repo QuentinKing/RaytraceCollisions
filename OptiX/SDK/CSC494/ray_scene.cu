@@ -269,8 +269,10 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 
 	float importance_cutoff = 0.01;
 	float3 reflectivity = make_float3(0.1, 0.1, 0.1);
+	float3 reflectivity_n = make_float3(0.2, 0.2, 0.2);
 	int max_depth = 100;
 
+	float3 r = schlick(-dot(ffnormal, ray.direction), reflectivity_n);
 	float importance = prd_radiance.importance * optix::luminance(reflectivity);
 
 	// reflection ray
@@ -282,7 +284,7 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 		float3 R = reflect(ray.direction, ffnormal);
 		optix::Ray refl_ray( hit_point, R, radiance_ray_type, scene_epsilon );
 		rtTrace(top_object, refl_ray, refl_prd);
-		color += reflectivity * refl_prd.result;
+		color += r * refl_prd.result;
 	}
 
 	prd_radiance.result = color;
