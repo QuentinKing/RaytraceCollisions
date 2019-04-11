@@ -167,15 +167,9 @@ RT_PROGRAM void perspective_camera()
 		// Check for intersections (and fill in the intersection buffer)
 		if (isPhysicsRay)
 			CheckIntersectionOverlap(prd, ray_origin, ray_direction);
+	}
 
-		// Shade the object with the properties we saved while raycasting
-		// This is essentially the closest hit shader
-		output_buffer[launch_index] = make_color(prd.result);
-	}
-	else
-	{
-		output_buffer[launch_index] = make_color(prd.missColor);
-	}
+	output_buffer[launch_index] = make_color(prd.result);
 }
 
 //
@@ -189,7 +183,7 @@ RT_PROGRAM void miss()
 	float3 point = normalize(ray.direction);
 	float u = atan2(point.x, point.z) / (2.0 * M_PIf) + 0.5;
 	float v = point.y * 0.5 + 0.5;
-	prd_radiance.missColor = make_float3(tex2D(envmap, u, v));
+	prd_radiance.result = make_float3(tex2D(envmap, u, v));
 }
 
 
@@ -271,6 +265,24 @@ RT_PROGRAM void closest_hit_radiance_sphere()
 					color += specularColorIntensity * Lc * pow(nDh, specularPower);
 			}
 		}
+	}
+
+	float importance_cutoff = 0.01;
+	float3 reflectivity = make_float3(0.1, 0.1, 0.1);
+	int max_depth = 100;
+
+	float importance = prd_radiance.importance * optix::luminance(reflectivity);
+
+	// reflection ray
+	if (importance > importance_cutoff && prd_radiance.depth < max_depth) 
+	{
+		PerRayData_radiance refl_prd;
+		refl_prd.importance = importance;
+		refl_prd.depth = prd_radiance.depth+1;
+		float3 R = reflect(ray.direction, ffnormal);
+		optix::Ray refl_ray( hit_point, R, radiance_ray_type, scene_epsilon );
+		rtTrace(top_object, refl_ray, refl_prd);
+		color += reflectivity * refl_prd.result;
 	}
 
 	prd_radiance.result = color;

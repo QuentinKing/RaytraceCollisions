@@ -30,7 +30,7 @@ struct PerRayData_radiance
 {
 	float3 result;
 	float3 missColor;
-	float  importance;
+	float importance;
 	int depth;
 
 	bool hitObject;
