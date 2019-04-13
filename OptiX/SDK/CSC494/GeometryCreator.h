@@ -21,10 +21,9 @@ public:
 	};
 	~GeometryCreator() {};
 
-	GeometryInstance CreateSphere(float radius);
-	GeometryInstance CreateBox(float3 axisLengths);
-	GeometryInstance CreatePlane(float3 anchor, float3 v1, float3 v2);
-	GeometryInstance CreateMesh(std::string meshFilePath);
+	GeometryInstance CreateSphere(float radius, const char* materialProgram);
+	GeometryInstance CreateBox(float3 axisLengths, const char* materialProgram);
+	GeometryInstance CreateMesh(std::string meshFilePath, const char* materialProgram);
 
 private:
 	Context context;

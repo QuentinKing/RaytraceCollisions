@@ -174,17 +174,17 @@ void Scene::CreateScene()
 	Group sceneGroup = context->createGroup();
 
 	// Create rigidbodies
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, "closest_hit_radiance_sphere");
 	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 0.0f, -4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), "closest_hit_radiance_box");
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 98.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj");
+	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", "closest_hit_radiance_mesh");
 	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 2, make_float3(0.0f, 0.0f, 0.0f), 1.0f, "Trbvh", true, false);
 	sceneRigidBodies.push_back(rigidBody);
 
