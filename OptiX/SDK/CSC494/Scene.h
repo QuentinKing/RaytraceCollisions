@@ -55,8 +55,6 @@ private:
 	void ResolveCollisions();
 	void DisplayGUI(float volume);
 
-	float GetMagnitude(float3 vector);
-
 	// Static callbacks for GLUT
 	static void DestroyContext();
 	static void GlutInitialize(int* argc, char** argv);

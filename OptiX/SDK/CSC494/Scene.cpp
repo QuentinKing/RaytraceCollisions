@@ -76,13 +76,6 @@ Buffer Scene::GetResponseBuffer()
 	return context["collisionResponse"]->getBuffer();
 }
 
-// TODO: move this to a like a math class or something
-float Scene::GetMagnitude(float3 vector)
-{
-	return sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
-}
-
-
 void Scene::Setup(int argc, char** argv, std::string out_file, bool use_pbo)
 {
 	try

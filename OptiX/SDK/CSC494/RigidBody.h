@@ -104,9 +104,6 @@ private:
 	Matrix3x3 Star(float3 vector);
 	void UpdateTransformNode();
 
-	Matrix3x3 QuaternionToRotation(float4 quaternion);
-	float4 RotationToQuaternion(Matrix3x3 rotation);
-
 	// Optix variable
 	Context context;
 	Transform transformNode;

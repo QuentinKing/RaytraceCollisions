@@ -328,6 +328,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.cpp" />
     <ClCompile Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RigidBody.cpp" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\RayStructs.h" />
+    <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\MathHelpers.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\IntersectionRefinement.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\BufferStructs.h" />
     <ClInclude Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\GeometryCreator.h" />
