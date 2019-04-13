@@ -146,7 +146,7 @@ void Scene::CreateContext()
 
 	// Miss program
 	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, "miss"));
-	const std::string texpath = "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\CedarCity.hdr";
+	const std::string texpath = "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\Rathaus.hdr";
     context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, make_float3(1.0, 1.0, 1.0)));
 
 	// Exception program
@@ -362,7 +362,7 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 0.25f;
+	float k = 75.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
@@ -372,8 +372,8 @@ void Scene::ResolveCollisions()
 		if (responseData[i].volume > 0.0f)
 		{
 			float volumeConstraint = sqrt(response.volume);
-			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k, response.entryPoint);
-			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k, response.exitPoint);
+			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * volumeConstraint * k / 2.0, response.entryPoint);
+			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * volumeConstraint * k / 2.0, response.exitPoint);
 			volume += response.volume;
 		}
 	}
