@@ -170,46 +170,30 @@ void Scene::CreateScene()
 {
 	GeometryCreator geometryCreator(context, PROJECT_NAME, SCENE_NAME);
 
-	// All non-rigidbody geometry
-	std::vector<GeometryInstance> staticGeometry;
-	GeometryGroup staticGroup = context->createGeometryGroup();
-
 	// Create root scene group
 	Group sceneGroup = context->createGroup();
 
 	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f);
-	RigidBody rigidBody(context, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, false);
+	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f));
-	rigidBody = RigidBody(context, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, false);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 0.0f, -4.0f), 1.0f, "NoAccel", false, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 28.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	/*
-	 * Testing
-	 */
 	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj");
-	staticGeometry.push_back(mesh);
-	//
-
-	// Create static geometry group
-	staticGroup->setChildCount(static_cast<unsigned int>(staticGeometry.size()));
-	for (uint i = 0; i < staticGeometry.size(); i++)
-	{
-		staticGroup->setChild(i, staticGeometry[i]);
-	}
-	staticGroup->setAcceleration(context->createAcceleration("Trbvh"));
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 2, make_float3(0.0f, 0.0f, 0.0f), 1.0f, "Trbvh", true, false);
+	sceneRigidBodies.push_back(rigidBody);
 
 	// Set up scene group
-	sceneGroup->setChildCount(sceneRigidBodies.size() + 1); // +1 for static geometry
+	sceneGroup->setChildCount(sceneRigidBodies.size());
 	for (uint i = 0; i < sceneRigidBodies.size(); i++)
 	{
 		sceneGroup->setChild(i, sceneRigidBodies[i].GetTransform());
 	}
-	sceneGroup->setChild(sceneRigidBodies.size(), staticGroup);
 	sceneGroup->setAcceleration(context->createAcceleration("NoAccel"));
 
 	context["top_object"]->set(sceneGroup);

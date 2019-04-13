@@ -26,9 +26,7 @@ GeometryInstance GeometryCreator::CreateSphere(float radius)
 	// Create material
 	Material sphere_matl = context->createMaterial();
 	Program sphere_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_sphere");
-	Program sphere_ah = context->createProgramFromPTXString(scenePtx, "any_hit");
 	sphere_matl->setClosestHitProgram(0, sphere_ch);
-	sphere_matl->setAnyHitProgram(0, sphere_ah);
 
 	// Shadow caster program
 	Program sphere_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");

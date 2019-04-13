@@ -24,8 +24,8 @@ void RigidBody::CalculateAuxiliaryVariables()
 	inertiaInv = rotation * inertiaBodyInv * rotation.transpose();
 	spinVector = inertiaInv * angularMomentum;
 
-	this->mesh->getGeometry()["velocity"]->setFloat(velocity);
-	this->mesh->getGeometry()["spinVector"]->setFloat(spinVector);
+	this->geometryInstance->getGeometry()["velocity"]->setFloat(velocity);
+	this->geometryInstance->getGeometry()["spinVector"]->setFloat(spinVector);
 }
 
 /*
@@ -33,6 +33,11 @@ void RigidBody::CalculateAuxiliaryVariables()
 */
 void RigidBody::ODE(float deltaTime)
 {
+	if (isStatic)
+	{
+		return;
+	}
+
 	// Apply Gravity
 	if (useGravity)
 	{

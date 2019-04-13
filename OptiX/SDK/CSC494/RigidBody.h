@@ -24,21 +24,24 @@ struct PlaneData
 class RigidBody
 {
 public:
-	RigidBody(Context context, GeometryInstance mesh, uint id, float3 startingPosition, float mass, bool useGravity = true, float bounciness = 0.2) :
+	RigidBody(Context context, const char* projectPrefix, const char* sceneName, GeometryInstance geometryInstance,
+			  uint id, float3 startingPosition, float mass, const char* acceleration, bool isStatic,
+			  bool useGravity = true, float drag = 0.5f) :
 		context(context),
-		mesh(mesh),
+		geometryInstance(geometryInstance),
 		id(id),
 		mass(mass),
+		isStatic(isStatic),
 		useGravity(useGravity),
-		bounciness(bounciness)
+		kDrag(drag)
 	{
 		// Create geometry group
 		geometryGroup = context->createGeometryGroup();
 		geometryGroup->setChildCount(1);
-		geometryGroup->setChild(0, mesh);
-		geometryGroup->setAcceleration(context->createAcceleration("NoAccel"));
+		geometryGroup->setChild(0, geometryInstance);
+		geometryGroup->setAcceleration(context->createAcceleration(acceleration));
 
-		mesh->getGeometry()["id"]->setFloat(id);
+		geometryInstance->getGeometry()["id"]->setFloat(id);
 
 		// Init state
 		inertiaBody = make_matrix3x3(Matrix4x4::identity());
@@ -65,6 +68,19 @@ public:
 		transformNode->setMatrix(false, transformMatrix, NULL);
 
 		MarkGroupAsDirty();
+
+		// Link any-hit program based on if the object is static or not
+		Program anyHit;
+		const char* scenePtx = sutil::getPtxString(projectPrefix, sceneName);
+		if (isStatic)
+		{
+			anyHit = context->createProgramFromPTXString(scenePtx, "any_hit_static");
+		}
+		else
+		{
+			anyHit = context->createProgramFromPTXString(scenePtx, "any_hit");
+		}
+		geometryInstance->getMaterial(0)->setAnyHitProgram(0, anyHit);
 	};
 	~RigidBody() {};
 
@@ -95,15 +111,13 @@ private:
 	Context context;
 	Transform transformNode;
 	GeometryGroup geometryGroup;
-	GeometryInstance mesh;
+	GeometryInstance geometryInstance;
 
 	float transformMatrix[16];
 
-	// TODO: Set based on geometry
-	float kDrag = 0.5f; // Coefficient of drag
+	bool isStatic;
+	float kDrag = 0.5f;
 	bool useGravity;
-
-	float bounciness;
 
 	// Rigidbody id
 	uint id;
