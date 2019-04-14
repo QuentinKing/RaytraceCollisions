@@ -10,6 +10,7 @@ struct IntersectionResponse
 	float volume;			// Volume of intersection
 	int entryId;			// Rigidbody id of the entry point of intersection
 	int exitId;				// Rigidbody id of the exit point of intersection
+	int collisionId;		// Id of the other rigidbody collided with
 	float3 entryNormal;		// Surface normal of intersection entry
 	float3 exitNormal;		// Surface normal of intersection exit
 	float3 entryPoint;		// Entry point of intersection in world space

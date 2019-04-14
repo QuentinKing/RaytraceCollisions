@@ -40,8 +40,6 @@ rtDeclareVariable(float3, axisLengths, , );
 
 // Volumetric variables (All geometry need this)
 rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
-rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
-rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 // Rigidbody specific variables
@@ -72,25 +70,26 @@ RT_PROGRAM void box_intersect(int)
 
 	if (tmin <= tmax) 
 	{
-		// Always call the any hit function, so we have to report an intersection closer than 
-		// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
-		// function, make sure we ignore the intersection so it doesn't store this value.
-		bool ignore = tmin > current_closest; 
-		float modified_t_value = ignore ? current_closest - 1.0f : tmin;
-
-		if (rtPotentialIntersection(tmin)) 
+		if (tmin > 0 && rtPotentialIntersection(tmin)) 
 		{
-			ignore_intersection = ignore;
-
 			IntersectionData data;
 			data.rigidBodyId = id;
-			data.entryTval = tmin;
-			data.exitTval = tmax;
-			data.entryNormal = boxnormal(tmin, t0, t1);
-			data.exitNormal = boxnormal(tmax, t0, t1);
+			data.t = tmin;
+			data.normal = boxnormal(tmin, t0, t1);
 			intersectionData = data;
 
-			shading_normal = geometric_normal = data.entryNormal;
+			shading_normal = geometric_normal = data.normal;
+			rtReportIntersection(0);
+		}
+		else if (tmax > 0 && rtPotentialIntersection(tmax))
+		{
+			IntersectionData data;
+			data.rigidBodyId = id;
+			data.t = tmax;
+			data.normal = boxnormal(tmax, t0, t1);
+			intersectionData = data;
+
+			shading_normal = geometric_normal = data.normal;
 			rtReportIntersection(0);
 		}
 	}

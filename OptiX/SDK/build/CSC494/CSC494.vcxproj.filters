@@ -53,9 +53,6 @@
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu">
       <Filter>CUDA Files</Filter>
     </None>
-    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\parallelogram.cu">
-      <Filter>CUDA Files</Filter>
-    </None>
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\triangle_mesh.cu">
       <Filter>CUDA Files</Filter>
     </None>

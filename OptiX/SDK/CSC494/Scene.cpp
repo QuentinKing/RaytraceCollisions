@@ -22,7 +22,7 @@
 #include "RigidBody.h"
 #include "GeometryCreator.h"
 #include "BufferStructs.h"
-
+#include "MathHelpers.h"
 #include "Scene.h"
 
 using namespace optix;
@@ -43,7 +43,7 @@ double		 last_update_time = 0;
 // This controls how many rays are used for volume detection.
 // The higher the number, the lower the resolution is for the collision buffer but
 // the performance of the program will increase
-uint32_t	 physicsRayStep = 2;
+uint32_t	 physicsRayStep = 8;
 
 const char*  scene_ptx;
 
@@ -64,11 +64,6 @@ int        mouse_button;
 Buffer Scene::GetOutputBuffer()
 {
 	return context["output_buffer"]->getBuffer();
-}
-
-Buffer Scene::GetRigidbodyMotionBuffer()
-{
-	return context["rigidbodyMotions"]->getBuffer();
 }
 
 Buffer Scene::GetResponseBuffer()
@@ -149,7 +144,7 @@ void Scene::CreateContext()
 	// Exception program
 	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
 	context->setExceptionProgram(0, exception_program);
-	context["bad_color"]->setFloat(1.0f, 0.0f, 0.80f);
+	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
 
 	float importance_cutoff = 0.01;
 	int max_depth = 100;
@@ -180,18 +175,23 @@ void Scene::CreateScene()
 	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, mat1);
 	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, -20.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 98.0f));
-	sceneRigidBodies.push_back(rigidBody);
+	//GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
+	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+	//sceneRigidBodies.push_back(rigidBody);
+
+	//GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
+	//sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 2, make_float3(0.0f, 0.0f, 0.0f), 1.0f, "Trbvh", true, false);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
 	sceneRigidBodies.push_back(rigidBody);
-
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());
@@ -205,30 +205,6 @@ void Scene::CreateScene()
 	context["top_shadower"]->set(sceneGroup);
 
 	CreateLights();
-
-	// Create rigidbody buffer
-	RigidbodyMotion* motions = new RigidbodyMotion[sceneRigidBodies.size()];
-
-	int j = 0;
-	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
-	{
-		motions[j].velocity = make_float3(0.0f, 0.0f, 0.0f);
-		motions[j].spin = make_float3(0.0f, 0.0f, 0.0f);
-		j++;
-	}
-
-	Buffer rigidbodyMotion_buffer = context->createBuffer( RT_BUFFER_INPUT );
-    rigidbodyMotion_buffer->setFormat( RT_FORMAT_USER );
-    rigidbodyMotion_buffer->setElementSize( sizeof( RigidbodyMotion ) );
-    rigidbodyMotion_buffer->setSize(sceneRigidBodies.size());
-
-	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
-    rigidbodyMotion_buffer->unmap();
-
-    context["rigidbodyMotions"]->set(rigidbodyMotion_buffer);
-	context["numRigidbodies"]->setInt(sceneRigidBodies.size());
-
-	delete[] motions;
 
 	// Create collision response buffer
 	// Each pixel stores the volume of intersection between the pair of rigidbodies
@@ -285,27 +261,6 @@ void Scene::UpdateGeometry()
 	last_update_time = sutil::currentTime();
 }
 
-void Scene::UpdateRigidbodyState()
-{
-	RigidbodyMotion* motions = new RigidbodyMotion[sceneRigidBodies.size()];
-
-	int j = 0;
-	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
-	{
-		motions[j].velocity = i->GetVelocity();
-		motions[j].spin = i->GetSpin();
-		j++;
-	}
-
-	Buffer rigidbodyMotion_buffer = GetRigidbodyMotionBuffer();
-	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
-    rigidbodyMotion_buffer->unmap();
-
-    context["rigidbodyMotions"]->set( rigidbodyMotion_buffer );
-
-	delete[] motions;
-}
-
 void Scene::UpdateCamera()
 {
 	const float vfov = 60.0f;
@@ -351,18 +306,27 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 75.0f;
+	float k = 10.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
 	for(uint i = 0; i < physicsPixels; i++)
 	{
 		IntersectionResponse response = responseData[i];
-		if (responseData[i].volume > 0.0f)
+		if (responseData[i].volume > 0.00001f)
 		{
 			float volumeConstraint = sqrt(response.volume);
-			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * volumeConstraint * k / 2.0, response.entryPoint);
-			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * volumeConstraint * k / 2.0, response.exitPoint);
+
+			// Apply force at collision entry
+			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+			int otherId = response.collisionId == response.entryId ? response.exitId : response.collisionId;
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+
+			// Apply force at collision exit
+			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+			otherId = response.collisionId;
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+
 			volume += response.volume;
 		}
 	}
@@ -442,7 +406,6 @@ void Scene::GlutDisplay()
 {
 	Scene instance = Scene::Get();
 	instance.UpdateGeometry();
-	instance.UpdateRigidbodyState();
 	instance.UpdateCamera();
 
 	instance.context->launch(0, width, height);
