@@ -77,13 +77,14 @@ void meshIntersect( int primIdx )
 
     if(  rtPotentialIntersection( t ) ) 
 	{
+	  geometric_normal = normalize( n );
+
 	  IntersectionData data;
 	  data.rigidBodyId = id;
 	  data.t = t;
 	  data.normal = geometric_normal;
 	  intersectionData = data;
 
-      geometric_normal = normalize( n );
       if( normal_buffer.size() == 0 ) {
         shading_normal = geometric_normal; 
       } else {

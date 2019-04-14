@@ -178,27 +178,20 @@ void Scene::CreateScene()
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -20.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	bool useCube = true;
+	//GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
+	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+	//sceneRigidBodies.push_back(rigidBody);
 
-	if (useCube)
-	{
-		GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
-		rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
-		sceneRigidBodies.push_back(rigidBody);
+	//GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
+	//sceneRigidBodies.push_back(rigidBody);
 
-		GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
-		rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
-		sceneRigidBodies.push_back(rigidBody);
-	}
-	else
-	{
-		GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
-		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(0.5f, 4.0f, -4.0f), 1.0f, "Trbvh", false, false);
-		rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
-		sceneRigidBodies.push_back(rigidBody);
-	}
+	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
+	sceneRigidBodies.push_back(rigidBody);
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());
