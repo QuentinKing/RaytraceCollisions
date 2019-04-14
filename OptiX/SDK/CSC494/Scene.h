@@ -39,7 +39,6 @@ public:
 	void Setup(int argc, char** argv, std::string out_file, bool use_pbo);
 
 	Buffer GetOutputBuffer();
-	Buffer GetRigidbodyMotionBuffer();
 	Buffer GetResponseBuffer();
 
 private:
@@ -50,7 +49,6 @@ private:
 	void CreateLights();
 	void SetupCamera();
 	void UpdateGeometry();
-	void UpdateRigidbodyState();
 	void UpdateCamera();
 	void ResolveCollisions();
 	void DisplayGUI(float volume);

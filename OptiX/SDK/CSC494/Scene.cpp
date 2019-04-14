@@ -66,11 +66,6 @@ Buffer Scene::GetOutputBuffer()
 	return context["output_buffer"]->getBuffer();
 }
 
-Buffer Scene::GetRigidbodyMotionBuffer()
-{
-	return context["rigidbodyMotions"]->getBuffer();
-}
-
 Buffer Scene::GetResponseBuffer()
 {
 	return context["collisionResponse"]->getBuffer();
@@ -218,30 +213,6 @@ void Scene::CreateScene()
 
 	CreateLights();
 
-	// Create rigidbody buffer
-	RigidbodyMotion* motions = new RigidbodyMotion[sceneRigidBodies.size()];
-
-	int j = 0;
-	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
-	{
-		motions[j].velocity = make_float3(0.0f, 0.0f, 0.0f);
-		motions[j].spin = make_float3(0.0f, 0.0f, 0.0f);
-		j++;
-	}
-
-	Buffer rigidbodyMotion_buffer = context->createBuffer( RT_BUFFER_INPUT );
-    rigidbodyMotion_buffer->setFormat( RT_FORMAT_USER );
-    rigidbodyMotion_buffer->setElementSize( sizeof( RigidbodyMotion ) );
-    rigidbodyMotion_buffer->setSize(sceneRigidBodies.size());
-
-	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
-    rigidbodyMotion_buffer->unmap();
-
-    context["rigidbodyMotions"]->set(rigidbodyMotion_buffer);
-	context["numRigidbodies"]->setInt(sceneRigidBodies.size());
-
-	delete[] motions;
-
 	// Create collision response buffer
 	// Each pixel stores the volume of intersection between the pair of rigidbodies
 	Buffer response_buffer = context->createBuffer( RT_BUFFER_INPUT_OUTPUT );
@@ -295,28 +266,6 @@ void Scene::UpdateGeometry()
 	}
 
 	last_update_time = sutil::currentTime();
-}
-
-void Scene::UpdateRigidbodyState()
-{
-	RigidbodyMotion* motions = new RigidbodyMotion[sceneRigidBodies.size()];
-
-	int j = 0;
-	for (auto i = sceneRigidBodies.begin(); i != sceneRigidBodies.end(); ++i)
-	{
-		motions[j].velocity = i->GetVelocity();
-		motions[j].spin = i->GetSpin();
-		j++;
-	}
-
-	// TODO: pretty sure this is not used anymore
-	Buffer rigidbodyMotion_buffer = GetRigidbodyMotionBuffer();
-	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
-    rigidbodyMotion_buffer->unmap();
-
-    context["rigidbodyMotions"]->set( rigidbodyMotion_buffer );
-
-	delete[] motions;
 }
 
 void Scene::UpdateCamera()
@@ -455,7 +404,6 @@ void Scene::GlutDisplay()
 {
 	Scene instance = Scene::Get();
 	instance.UpdateGeometry();
-	instance.UpdateRigidbodyState();
 	instance.UpdateCamera();
 
 	instance.context->launch(0, width, height);
