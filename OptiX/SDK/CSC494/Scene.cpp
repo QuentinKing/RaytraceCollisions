@@ -149,7 +149,7 @@ void Scene::CreateContext()
 	// Exception program
 	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
 	context->setExceptionProgram(0, exception_program);
-	context["bad_color"]->setFloat(1.0f, 0.0f, 0.80f);
+	context["bad_color"]->setFloat(0.0f, 1.0f, 0.0f);
 
 	float importance_cutoff = 0.01;
 	int max_depth = 100;
@@ -180,18 +180,30 @@ void Scene::CreateScene()
 	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, mat1);
 	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, -20.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 98.0f));
-	sceneRigidBodies.push_back(rigidBody);
+	bool useCube = true;
 
-	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 2, make_float3(0.0f, 0.0f, 0.0f), 1.0f, "Trbvh", true, false);
-	sceneRigidBodies.push_back(rigidBody);
+	if (useCube)
+	{
+		GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
+		rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+		sceneRigidBodies.push_back(rigidBody);
 
+		GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
+		rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
+		sceneRigidBodies.push_back(rigidBody);
+	}
+	else
+	{
+		GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
+		rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(0.5f, 4.0f, -4.0f), 1.0f, "Trbvh", false, false);
+		rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+		sceneRigidBodies.push_back(rigidBody);
+	}
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());
@@ -297,6 +309,7 @@ void Scene::UpdateRigidbodyState()
 		j++;
 	}
 
+	// TODO: pretty sure this is not used anymore
 	Buffer rigidbodyMotion_buffer = GetRigidbodyMotionBuffer();
 	memcpy(rigidbodyMotion_buffer->map(), motions, sizeof(RigidbodyMotion) * sceneRigidBodies.size());
     rigidbodyMotion_buffer->unmap();
@@ -351,18 +364,18 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 75.0f;
+	float k = 1.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
 	for(uint i = 0; i < physicsPixels; i++)
 	{
 		IntersectionResponse response = responseData[i];
-		if (responseData[i].volume > 0.0f)
+		if (responseData[i].volume > 0.0000001f)
 		{
 			float volumeConstraint = sqrt(response.volume);
-			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * volumeConstraint * k / 2.0, response.entryPoint);
-			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * volumeConstraint * k / 2.0, response.exitPoint);
+			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
 			volume += response.volume;
 		}
 	}

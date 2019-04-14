@@ -338,7 +338,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\ray_scene.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\sphere_model.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\box.cu" />
-    <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\parallelogram.cu" />
     <None Include="C:\Users\Quentin\Github\RaytraceCollisions\OptiX\SDK\CSC494\triangle_mesh.cu" />
   </ItemGroup>
   <ItemGroup>

@@ -68,19 +68,6 @@ public:
 		transformNode->setMatrix(false, transformMatrix, NULL);
 
 		MarkGroupAsDirty();
-
-		// Link any-hit program based on if the object is static or not
-		Program anyHit;
-		const char* scenePtx = sutil::getPtxString(projectPrefix, sceneName);
-		if (isStatic)
-		{
-			anyHit = context->createProgramFromPTXString(scenePtx, "any_hit_static");
-		}
-		else
-		{
-			anyHit = context->createProgramFromPTXString(scenePtx, "any_hit");
-		}
-		geometryInstance->getMaterial(0)->setAnyHitProgram(0, anyHit);
 	};
 	~RigidBody() {};
 

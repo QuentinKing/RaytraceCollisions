@@ -33,8 +33,6 @@ using namespace optix;
 
 // Volumetric variables (All geometry need this)
 rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
-rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
-rtDeclareVariable(float, current_closest, rtIntersectionDistance, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 // Rigidbody specific variables
@@ -88,25 +86,27 @@ void intersect_sphere(void)
 		float t1 = root1 + root11;
 		float t2 = (-b + sdisc) + (do_refine ? root1 : 0);
 
-		// Always call the any hit function, so we have to report an intersection closer than 
-		// the closest intersection. If we have to fudge the numbers a bit to make sure we call the any-hit
-		// function, make sure we ignore the intersection so it doesn't store this value.
-		bool ignore = t1 > current_closest; 
-		float modified_t_value = ignore ? current_closest - 1.0f : t1;
-
-		if (rtPotentialIntersection(modified_t_value))
+		if (rtPotentialIntersection(t1))
 		{
-			ignore_intersection = ignore;
+			IntersectionData entryData;
+			entryData.rigidBodyId = id;
+			entryData.t = t1;
+			entryData.normal = (O + (root1 + root11)*D) / radius;
+			intersectionData = entryData;
 
-			IntersectionData data;
-			data.rigidBodyId = id;
-			data.entryTval = t1;
-			data.exitTval = t2;
-			data.entryNormal = (O + (root1 + root11)*D) / radius;
-			data.exitNormal = (O + t2*D)/radius;
-			intersectionData = data;
+			shading_normal = geometric_normal = (O + (root1 + root11)*D) / radius;
+			rtReportIntersection(0);
+		}
 
-			shading_normal = geometric_normal = data.entryNormal;
+		if (rtPotentialIntersection(t2))
+		{
+			IntersectionData exitData;
+			exitData.rigidBodyId = id;
+			exitData.t = t2;
+			exitData.normal = (O + t2*D)/radius;
+			intersectionData = exitData;
+
+			shading_normal = geometric_normal = (O + t2*D)/radius;
 			rtReportIntersection(0);
 		}
 	}

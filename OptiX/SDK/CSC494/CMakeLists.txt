@@ -52,6 +52,5 @@ OPTIX_add_sample_executable( CSC494
   ray_scene.cu
   sphere_model.cu
   box.cu
-  parallelogram.cu
   triangle_mesh.cu
 )

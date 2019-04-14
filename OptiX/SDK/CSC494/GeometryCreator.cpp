@@ -108,7 +108,7 @@ GeometryInstance GeometryCreator::CreateMesh(std::string meshFilePath, MaterialP
 
 	// .obj are really small so just bump them up by default
 	Matrix4x4 xform = Matrix4x4::identity();
-	xform *= 50.0f;
+	xform *= 0.5f;
 	loadMesh(meshFilePath, mesh, xform);
 
 	return mesh.geom_instance;

@@ -56,16 +56,12 @@ rtBuffer<uchar4, 2>								 output_buffer;
 rtBuffer<IntersectionResponse, 2>				 collisionResponse;
 
 // Rigidbody variables
-rtDeclareVariable(int, numRigidbodies, , );
 rtDeclareVariable(int, physicsRayStep, , );
 rtDeclareVariable(int, physicsBufferWidth, , );
 rtDeclareVariable(int, physicsBufferHeight, , );
-rtBuffer<RigidbodyMotion> rigidbodyMotions; 
 
 // Volumetric variables
 rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
-rtDeclareVariable(float, staticTVal, attribute staticTVal, );
-rtDeclareVariable(bool, ignore_intersection, attribute ignore_intersection, );
 
 // Shading values
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
@@ -99,45 +95,110 @@ void ClearResponseBuffer()
 	collisionResponse[make_uint2(launch_index.x / physicsRayStep, launch_index.y / physicsRayStep)] = data;
 }
 
-// Checks given a list of entry and exit points if any of them overlap
-// indicating that an intersection has occured for the current ray
-void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3 ray_direction)
+// Given an ordered list of ray intersections, finds all intervals of intersections and
+// computes their volumes.
+void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3 ray_direction, float3& result)
 {
+	// Right now, just store the largest intersection volume into the buffer
+	IntersectionResponse largestResponse;
+	largestResponse.volume = -1.0f; // Use this fact to check later if we computed any volumes
+	IntersectionData objectsInside[5]; // Assume we will never have more than 5 bodies intersecting at any given point
+	int insideIndex = 0;
+
 	float2 screen = make_float2(output_buffer.size());
-	float total = 0.0f;
+	float fovDelta = 1.0 / screen.x;
+	float theta = fov * fovDelta;
+	float phi = 90.0 - theta;
+
+	// Debugging
+	float largestT = 0.0;
 
 	for (int i = 0; i < prd.numIntersections; i++)
 	{
-		float2 firstInterval = make_float2(prd.intersections[i].entryTval, prd.intersections[i].exitTval);
-		for (int j = i + 1; j < prd.numIntersections; j++)
+		IntersectionData objEnter; // Will be set if we need it
+
+		// Check to see if we are entering this object
+		bool entering = true;
+		for (int j = 0; j < insideIndex; j++)
 		{
-			float2 secondInterval = make_float2(prd.intersections[j].entryTval, prd.intersections[j].exitTval);
-
-			// Compute intersection volume and save it to our buffer
-			float intersection = max(0.0f, min(firstInterval.y, secondInterval.y) - max(firstInterval.x, secondInterval.x));
-			int entryIndex = max(firstInterval.x, secondInterval.x) == firstInterval.x ? i : j;
-			int exitIndex = min(firstInterval.y, secondInterval.y) == firstInterval.y ? i : j;
-
-			float fovDelta = 1.0 / screen.x;
-			float theta = fov * fovDelta;
-			float phi = 90.0 - theta;
-			float a = sin(theta) * prd.intersections[entryIndex].entryTval / sin(phi);
-			float b = sin(theta) * prd.intersections[exitIndex].exitTval / sin(phi);
-			float h = intersection;
-			float volume = 0.33 * (a*a + a * b + b * b) * h;
-
-			IntersectionResponse data;
-			data.volume = volume;
-			data.entryId = prd.intersections[entryIndex].rigidBodyId;
-			data.entryNormal = prd.intersections[entryIndex].entryNormal;
-			data.exitId = prd.intersections[exitIndex].rigidBodyId;
-			data.exitNormal = prd.intersections[exitIndex].exitNormal;
-			data.entryPoint = ray_origin + prd.intersections[entryIndex].entryTval * ray_direction;
-			data.exitPoint = ray_origin + prd.intersections[exitIndex].exitTval * ray_direction;
-			collisionResponse[make_uint2(launch_index.x / physicsRayStep, launch_index.y / physicsRayStep)] = data;
-
-			total += volume;
+			if (objectsInside[j].rigidBodyId == prd.intersections[i].rigidBodyId)
+			{
+				objEnter = objectsInside[j];
+				entering = false;
+			}
 		}
+
+		// If entering, add it to our tracking array
+		if (entering)
+		{
+			// Check if this intersection has an exit point (ie, is valid)
+			bool isValid = false;
+			for (int j = i + 1; j < prd.numIntersections; j++)
+			{
+				if (prd.intersections[j].rigidBodyId == prd.intersections[i].rigidBodyId)
+				{
+					isValid = true;
+					break;
+				}
+			}
+
+			if (isValid)
+			{
+				objectsInside[insideIndex] = prd.intersections[i];
+				insideIndex++;
+			}
+		}
+		else
+		{
+			// Otherwise, we are exiting this object, need to check for intersection volumes
+			// with any other objects we are currently inside
+			for (int j = 0; j < insideIndex; j++)
+			{
+				if (objectsInside[j].rigidBodyId != prd.intersections[i].rigidBodyId)
+				{
+					// Compute volume
+					IntersectionData entryPoint = objectsInside[j].t < objEnter.t ? objEnter : objectsInside[j];
+					IntersectionData exitPoint = prd.intersections[i];
+					
+					float a = sin(theta) * entryPoint.t/ sin(phi);
+					float b = sin(theta) * exitPoint.t/ sin(phi);
+					float h = exitPoint.t - entryPoint.t;
+					float volume = 0.33 * (a*a + a * b + b * b) * h;
+
+					if (volume > largestResponse.volume)
+					{
+						largestResponse.volume = volume;
+						largestResponse.entryId = entryPoint.rigidBodyId;
+						largestResponse.entryNormal = entryPoint.normal;
+						largestResponse.exitId = exitPoint.rigidBodyId;
+						largestResponse.exitNormal = exitPoint.normal;
+						largestResponse.entryPoint = ray_origin + entryPoint.t * ray_direction;
+						largestResponse.exitPoint = ray_origin + exitPoint.t * ray_direction;
+					}
+				}
+			}
+
+			// Remove this object from our tracking array
+			bool shift = false;
+			for (int j = 0; j < insideIndex; j++)
+			{
+				if (objectsInside[j].rigidBodyId == prd.intersections[i].rigidBodyId)
+				{
+					shift = true;
+					continue;
+				}
+
+				if (shift)
+				{
+					objectsInside[j - 1] = objectsInside[j];
+				}
+			}
+			insideIndex--;
+		}
+
+		// Finally, assign our biggest response to the buffer
+		collisionResponse[make_uint2(launch_index.x / physicsRayStep, launch_index.y / physicsRayStep)] = largestResponse;
+		
 	}
 }
 
@@ -155,30 +216,65 @@ RT_PROGRAM void perspective_camera()
 	float3 ray_origin = eye;
 	float3 ray_direction = normalize(d.x*U + d.y*V + W);
 
-	optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
+	float3 result = make_float3( 0.0f );
+
 
 	PerRayData_radiance prd;
-	prd.importance = 1.f;
+	prd.physicsRay = isPhysicsRay;
+	prd.done = false;
+
+	prd.origin = eye;
+
+	prd.result = make_float3(0.0, 0.0, 0.0);
+	prd.importance = 1.0;
 	prd.depth = 0;
+
 	prd.numIntersections = 0;
-	prd.hitObject = false;
-	prd.closestTval = 999999.0f;
 
-	rtTrace(top_object, ray, prd);
-
-	if (prd.hitObject)
+	for (;;)
 	{
-		// Check for intersections (and fill in the intersection buffer)
-		if (isPhysicsRay)
-			CheckIntersectionOverlap(prd, ray_origin, ray_direction);
+		optix::Ray ray(ray_origin, ray_direction, radiance_ray_type, scene_epsilon);
+		rtTrace(top_object, ray, prd);
+		result += prd.result;
+
+		if (prd.done || !isPhysicsRay)
+		{
+			break;
+		}
+
+		prd.depth++;
+		ray_origin = prd.origin;
 	}
 
-	output_buffer[launch_index] = make_color(prd.result);
+	if (isPhysicsRay)
+		CheckIntersectionOverlap(prd, eye, ray_direction, result);
+
+	output_buffer[launch_index] = make_color(result);
 }
 
 // Closest hit shading for the spheres
 RT_PROGRAM void closest_hit_radiance()
 {
+	float3 hit_point = ray.origin + closestHitDist * ray.direction;
+	float3 new_origin = ray.origin + (closestHitDist + 0.001) * ray.direction;
+	prd_radiance.origin = new_origin;
+
+	IntersectionData data;
+	data.rigidBodyId = intersectionData.rigidBodyId;
+	data.t = prd_radiance.numIntersections == 0 ? intersectionData.t : intersectionData.t + prd_radiance.intersections[prd_radiance.numIntersections - 1].t;
+	data.normal = intersectionData.normal;
+
+	prd_radiance.intersections[prd_radiance.numIntersections] = data;
+	prd_radiance.numIntersections++;
+
+	// Only shade first object we come in contact with, so no transparency
+	// for now, but possible to implement later
+	if (prd_radiance.numIntersections != 1)
+	{
+		prd_radiance.result = make_float3(0.0, 0.0, 0.0);
+		return;
+	}
+
 	float3 world_geo_normal = normalize(rtTransformNormal(
 										RT_OBJECT_TO_WORLD,
 										geometric_normal));
@@ -193,8 +289,6 @@ RT_PROGRAM void closest_hit_radiance()
 									world_geo_normal);
 
 	float3 color = ambientColorIntensity * ambientLightColor;
- 
-	float3 hit_point = ray.origin + closestHitDist * ray.direction;
 
 	// Phong diffuse shading
 	for(int i = 0; i < lights.size(); ++i) 
@@ -235,8 +329,17 @@ RT_PROGRAM void closest_hit_radiance()
 		PerRayData_radiance refl_prd;
 		refl_prd.importance = importance;
 		refl_prd.depth = prd_radiance.depth+1;
+
+		refl_prd.physicsRay = false;
+
+		refl_prd.result = make_float3(0.0, 0.0, 0.0);
+		refl_prd.importance = importance;
+		refl_prd.depth = prd_radiance.depth+1;
+
+		refl_prd.numIntersections = 0;
+
 		float3 R = reflect(ray.direction, ffnormal);
-		optix::Ray refl_ray( hit_point, R, radiance_ray_type, scene_epsilon );
+		optix::Ray refl_ray( hit_point + 0.001 * R, R, radiance_ray_type, scene_epsilon );
 		rtTrace(top_object, refl_ray, refl_prd);
 		color += r * refl_prd.result;
 	}
@@ -244,44 +347,25 @@ RT_PROGRAM void closest_hit_radiance()
 	prd_radiance.result = color;
 }
 
-// Any hit program, store depth value and potential shading properties
-RT_PROGRAM void any_hit()
-{
-	prd_radiance.hitObject = true;
-
-	// Record our intersection values
-	if (prd_radiance.numIntersections < INTERSECTION_SAMPLES)
-	{
-		prd_radiance.intersections[prd_radiance.numIntersections] = intersectionData;
-		prd_radiance.numIntersections++;
-
-		// Is this the closest object we have seen so far?
-		if (intersectionData.entryTval < prd_radiance.closestTval)
-		{
-			// Update shading properties since this is now the closest object
-			prd_radiance.closestTval = intersectionData.entryTval;
-		}
-	}
-
-	if (ignore_intersection)
-		rtIgnoreIntersection();
-}
-
-RT_PROGRAM void any_hit_static()
-{
-	// Record our intersection values
-	prd_radiance.hitObject = true;
-	prd_radiance.closestTval = min(prd_radiance.closestTval, staticTVal);
-}
-
 // Miss program, stored in ray data and will be used if no intersections
 // along our ray were recorded
 RT_PROGRAM void miss()
 {
+	// No more things to raytrace!
+	prd_radiance.done = true;
+
 	float3 point = normalize(ray.direction);
 	float u = atan2(point.x, point.z) / (2.0 * M_PIf) + 0.5;
 	float v = point.y * 0.5 + 0.5;
-	prd_radiance.result = make_float3(tex2D(envmap, u, v));
+
+	if (prd_radiance.numIntersections == 0)
+	{
+		prd_radiance.result = make_float3(tex2D(envmap, u, v));
+	}
+	else
+	{
+		prd_radiance.result = make_float3(0.0, 0.0, 0.0);
+	}
 }
 
 RT_PROGRAM void any_hit_shadow()
@@ -292,7 +376,7 @@ RT_PROGRAM void any_hit_shadow()
     rtTerminateRay();
 }
 
-// Exception program, deafult to some known exception color
+// Exception program, default to some known exception color
 RT_PROGRAM void exception()
 {
 	const unsigned int code = rtGetExceptionCode();

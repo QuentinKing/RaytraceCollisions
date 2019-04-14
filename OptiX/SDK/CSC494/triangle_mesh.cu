@@ -54,7 +54,9 @@ rtDeclareVariable(float3, shading_normal,   attribute shading_normal, );
 rtDeclareVariable(float3, back_hit_point,   attribute back_hit_point, ); 
 rtDeclareVariable(float3, front_hit_point,  attribute front_hit_point, ); 
 
-rtDeclareVariable(float, staticTVal, attribute staticTVal, );
+rtDeclareVariable(float, id, , );
+
+rtDeclareVariable(IntersectionData, intersectionData, attribute intersectionData, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 
@@ -73,9 +75,14 @@ void meshIntersect( int primIdx )
   float  t, beta, gamma;
   if( intersect_triangle( ray, p0, p1, p2, n, t, beta, gamma ) ) {
 
-    if(  rtPotentialIntersection( t ) ) {
+    if(  rtPotentialIntersection( t ) ) 
+	{
+	  IntersectionData data;
+	  data.rigidBodyId = id;
+	  data.t = t;
+	  data.normal = geometric_normal;
+	  intersectionData = data;
 
-	  staticTVal = t;
       geometric_normal = normalize( n );
       if( normal_buffer.size() == 0 ) {
         shading_normal = geometric_normal; 

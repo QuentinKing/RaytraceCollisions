@@ -26,25 +26,23 @@ static __device__ __inline__ float3 schlick( float nDi, const float3& rgb )
 struct IntersectionData
 {
 	uint rigidBodyId;
-
-	float entryTval;
-	float exitTval;
-
-	float3 entryNormal;
-	float3 exitNormal;
+	float t;
+	float3 normal;
 };
 
 struct PerRayData_radiance
 {
+	bool physicsRay;
+	bool done;
+
+	float3 origin;
+
 	float3 result;
-	float3 missColor;
 	float importance;
 	int depth;
 
-	bool hitObject;
 	int numIntersections;
 	IntersectionData intersections[INTERSECTION_SAMPLES];
-	float closestTval; // The z-depth of the closest object in the scene
 };
 
 struct PerRayData_shadow
