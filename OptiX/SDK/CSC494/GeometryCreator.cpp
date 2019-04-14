@@ -6,10 +6,11 @@
 #include <OptiXMesh.h>
 
 #include "GeometryCreator.h"
+#include "MaterialProperties.h"
 
 using namespace optix;
 
-GeometryInstance GeometryCreator::CreateSphere(float radius, const char* materialProgram)
+GeometryInstance GeometryCreator::CreateSphere(float radius, MaterialProperties materialProps)
 {
 	// Create geometry and transform
 	Geometry sphere = context->createGeometry();
@@ -25,25 +26,26 @@ GeometryInstance GeometryCreator::CreateSphere(float radius, const char* materia
 
 	// Create material
 	Material sphere_matl = context->createMaterial();
-	//Program sphere_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_sphere");
-	Program sphere_ch = context->createProgramFromPTXString(scenePtx, materialProgram);
+	Program sphere_ch = context->createProgramFromPTXString(scenePtx, materialProps.closestHitProgram);
 	sphere_matl->setClosestHitProgram(0, sphere_ch);
 
 	// Shadow caster program
 	Program sphere_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
 	sphere_matl->setAnyHitProgram(1, sphere_shadow);
 
-	// Hardcode in some material properties for now (color, etc..)
-	sphere_matl["ambientColorIntensity"]->setFloat( 0.3f, 0.3f, 0.3f );
-    sphere_matl["diffuseColorIntensity"]->setFloat( 0.6f, 0.7f, 0.8f );
-	sphere_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
-	sphere_matl["specularPower"]->setFloat( 88.0f );
+	// Link material properties to the cuda files
+	sphere_matl["ambientColorIntensity"]->setFloat(materialProps.ambientColor);
+    sphere_matl["diffuseColorIntensity"]->setFloat(materialProps.diffuseColor);
+	sphere_matl["specularColorIntensity"]->setFloat(materialProps.specularColor);
+	sphere_matl["specularPower"]->setFloat(materialProps.specularPower);
+	sphere_matl["fresnel"]->setFloat(materialProps.fresnel);
+	sphere_matl["reflectivity"]->setFloat(materialProps.reflectivity);
 
 	// Create Instance
 	return context->createGeometryInstance(sphere, &sphere_matl, &sphere_matl + 1); // + 1 designates how many materials we are using
 }
 
-GeometryInstance GeometryCreator::CreateBox(float3 axisLengths, const char* materialProgram)
+GeometryInstance GeometryCreator::CreateBox(float3 axisLengths, MaterialProperties materialProps)
 {
 	// Create geometry
 	Geometry box = context->createGeometry();
@@ -60,24 +62,25 @@ GeometryInstance GeometryCreator::CreateBox(float3 axisLengths, const char* mate
 
 	// Create Material
 	Material box_matl = context->createMaterial();
-	//Program box_ch = context->createProgramFromPTXString(scenePtx, "closest_hit_radiance_box");
-	Program box_ch = context->createProgramFromPTXString(scenePtx, materialProgram);
+	Program box_ch = context->createProgramFromPTXString(scenePtx, materialProps.closestHitProgram);
 	box_matl->setClosestHitProgram(0, box_ch);
 
 	// Shadow caster program
 	Program box_shadow = context->createProgramFromPTXString(scenePtx, "any_hit_shadow");
 	box_matl->setAnyHitProgram(1, box_shadow);
 
-	// Hardcode in some material properties for now (color, etc..)
-	box_matl["ambientColorIntensity"]->setFloat( 0.1f, 0.1f, 0.1f );
-    box_matl["diffuseColorIntensity"]->setFloat( 0.8f, 0.2f, 0.8f );
-	box_matl["specularColorIntensity"]->setFloat( 0.8f, 0.9f, 0.8f );
-	box_matl["specularPower"]->setFloat( 88.0f );
+	// Link material properties to the cuda files
+	box_matl["ambientColorIntensity"]->setFloat(materialProps.ambientColor);
+    box_matl["diffuseColorIntensity"]->setFloat(materialProps.diffuseColor);
+	box_matl["specularColorIntensity"]->setFloat(materialProps.specularColor);
+	box_matl["specularPower"]->setFloat(materialProps.specularPower);
+	box_matl["fresnel"]->setFloat(materialProps.fresnel);
+	box_matl["reflectivity"]->setFloat(materialProps.reflectivity);
 
 	return context->createGeometryInstance(box, &box_matl, &box_matl + 1);
 }
 
-GeometryInstance GeometryCreator::CreateMesh(std::string meshFilePath, const char* materialProgram)
+GeometryInstance GeometryCreator::CreateMesh(std::string meshFilePath, MaterialProperties materialProps)
 {
 	const char* ptx = sutil::getPtxString(projectPrefix, "triangle_mesh.cu");
 
@@ -91,18 +94,21 @@ GeometryInstance GeometryCreator::CreateMesh(std::string meshFilePath, const cha
     mesh.bounds = bounds;
 
 	Material mesh_matl = context->createMaterial();
-	Program mesh_ch = context->createProgramFromPTXString(scenePtx, materialProgram);
+	Program mesh_ch = context->createProgramFromPTXString(scenePtx, materialProps.closestHitProgram);
 	mesh_matl->setClosestHitProgram(0, mesh_ch);
 
-	mesh_matl["ambientColorIntensity"]->setFloat( 0.8f, 0.3f, 0.2f );
-    mesh_matl["diffuseColorIntensity"]->setFloat( 0.3f, 0.2f, 0.8f );
-	mesh_matl["specularColorIntensity"]->setFloat( 0.3f, 0.8f, 0.2f );
-	mesh_matl["specularPower"]->setFloat( 8.0f );
+	mesh_matl["ambientColorIntensity"]->setFloat(materialProps.ambientColor);
+    mesh_matl["diffuseColorIntensity"]->setFloat(materialProps.diffuseColor);
+	mesh_matl["specularColorIntensity"]->setFloat(materialProps.specularColor);
+	mesh_matl["specularPower"]->setFloat(materialProps.specularPower);
+	mesh_matl["fresnel"]->setFloat(materialProps.fresnel);
+	mesh_matl["reflectivity"]->setFloat(materialProps.reflectivity);
 
     mesh.material = mesh_matl;
 
+	// .obj are really small so just bump them up by default
 	Matrix4x4 xform = Matrix4x4::identity();
-	xform *= 40.0f;
+	xform *= 50.0f;
 	loadMesh(meshFilePath, mesh, xform);
 
 	return mesh.geom_instance;

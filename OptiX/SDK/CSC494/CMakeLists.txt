@@ -41,6 +41,7 @@ OPTIX_add_sample_executable( CSC494
   # Headers
   RayStructs.h
   MathHelpers.h
+  MaterialProperties.h
   IntersectionRefinement.h
   BufferStructs.h
   GeometryCreator.h

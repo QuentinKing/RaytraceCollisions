@@ -137,6 +137,10 @@ void Scene::CreateContext()
 	Program ray_gen_program = context->createProgramFromPTXString(scene_ptx, "perspective_camera");
 	context->setRayGenerationProgram(0, ray_gen_program);
 
+	// Set scene ray variables
+	context["importance_cutoff"]->setFloat(0.01f);
+	context["max_depth"]->setInt(100);
+
 	// Miss program
 	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, "miss"));
 	const std::string texpath = "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\Rathaus.hdr";
@@ -146,6 +150,9 @@ void Scene::CreateContext()
 	Program exception_program = context->createProgramFromPTXString(scene_ptx, "exception");
 	context->setExceptionProgram(0, exception_program);
 	context["bad_color"]->setFloat(1.0f, 0.0f, 0.80f);
+
+	float importance_cutoff = 0.01;
+	int max_depth = 100;
 }
 
 void Scene::DestroyContext()
@@ -166,20 +173,25 @@ void Scene::CreateScene()
 	// Create root scene group
 	Group sceneGroup = context->createGroup();
 
+	MaterialProperties mat1 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.3f, 0.3f, 0.3f), make_float3(0.9f, 0.9f, 0.9f), 300.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.9f, 0.9f, 0.9f));
+	MaterialProperties mat2 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.8f, 0.2f, 0.8f), make_float3(0.8f, 0.9f, 0.8f), 88.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.1f, 0.1f, 0.1f));
+	MaterialProperties mat3 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.3f, 0.7f, 0.5f), make_float3(0.9f, 0.9f, 0.9f), 88.0f, make_float3(0.0f, 0.0f, 0.0f), make_float3(0.0f, 0.0f, 0.0f));
+
 	// Create rigidbodies
-	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, "closest_hit_radiance_sphere");
+	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, mat1);
 	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -8.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), "closest_hit_radiance_box");
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
 	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 98.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", "closest_hit_radiance_mesh");
+	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
 	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 2, make_float3(0.0f, 0.0f, 0.0f), 1.0f, "Trbvh", true, false);
 	sceneRigidBodies.push_back(rigidBody);
+
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());

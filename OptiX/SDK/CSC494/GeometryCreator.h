@@ -8,6 +8,7 @@
 
 using namespace optix;
 
+#include "MaterialProperties.h"
 
 class GeometryCreator
 {
@@ -21,9 +22,9 @@ public:
 	};
 	~GeometryCreator() {};
 
-	GeometryInstance CreateSphere(float radius, const char* materialProgram);
-	GeometryInstance CreateBox(float3 axisLengths, const char* materialProgram);
-	GeometryInstance CreateMesh(std::string meshFilePath, const char* materialProgram);
+	GeometryInstance CreateSphere(float radius, MaterialProperties materialProps);
+	GeometryInstance CreateBox(float3 axisLengths, MaterialProperties materialProps);
+	GeometryInstance CreateMesh(std::string meshFilePath, MaterialProperties materialProps);
 
 private:
 	Context context;
