@@ -174,6 +174,7 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 						largestResponse.exitNormal = exitPoint.normal;
 						largestResponse.entryPoint = ray_origin + entryPoint.t * ray_direction;
 						largestResponse.exitPoint = ray_origin + exitPoint.t * ray_direction;
+						largestResponse.collisionId = objectsInside[j].rigidBodyId;
 					}
 				}
 			}

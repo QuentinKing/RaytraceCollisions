@@ -22,7 +22,7 @@
 #include "RigidBody.h"
 #include "GeometryCreator.h"
 #include "BufferStructs.h"
-
+#include "MathHelpers.h"
 #include "Scene.h"
 
 using namespace optix;
@@ -43,7 +43,7 @@ double		 last_update_time = 0;
 // This controls how many rays are used for volume detection.
 // The higher the number, the lower the resolution is for the collision buffer but
 // the performance of the program will increase
-uint32_t	 physicsRayStep = 2;
+uint32_t	 physicsRayStep = 8;
 
 const char*  scene_ptx;
 
@@ -313,18 +313,27 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 1.0f;
+	float k = 10.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
 	for(uint i = 0; i < physicsPixels; i++)
 	{
 		IntersectionResponse response = responseData[i];
-		if (responseData[i].volume > 0.0000001f)
+		if (responseData[i].volume > 0.00001f)
 		{
 			float volumeConstraint = sqrt(response.volume);
+
+			// Apply force at collision entry
 			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+			int otherId = response.collisionId == response.entryId ? response.exitId : response.collisionId;
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+
+			// Apply force at collision exit
 			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+			otherId = response.collisionId;
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+
 			volume += response.volume;
 		}
 	}
