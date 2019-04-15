@@ -178,20 +178,20 @@ void Scene::CreateScene()
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, -20.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	//GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
-	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
-	//sceneRigidBodies.push_back(rigidBody);
+	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+	sceneRigidBodies.push_back(rigidBody);
 
 	//GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
 	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
 	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
 	//sceneRigidBodies.push_back(rigidBody);
 
-	GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
-	sceneRigidBodies.push_back(rigidBody);
+	//GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\SDK\\data\\cow.obj", mat3);
+	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
+	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
+	//sceneRigidBodies.push_back(rigidBody);
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());
@@ -306,7 +306,7 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 10.0f;
+	float k = 5000000.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
@@ -315,7 +315,7 @@ void Scene::ResolveCollisions()
 		IntersectionResponse response = responseData[i];
 		if (responseData[i].volume > 0.00001f)
 		{
-			float volumeConstraint = sqrt(response.volume);
+			float volumeConstraint = response.volume * response.volume;
 
 			// Apply force at collision entry
 			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
