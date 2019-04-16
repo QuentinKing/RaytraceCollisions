@@ -1,4 +1,0 @@
-# CMake generation dependency list for this directory.
-C:/Users/Quentin/Github/RaytraceCollisions/OptiX/SDK/CMake/FindCUDA/run_nvcc.cmake
-C:/Users/Quentin/Github/RaytraceCollisions/OptiX/SDK/build/primeMultiBuffering/CMakeFiles/primeMultiBuffering.dir/__/primeSimple/primeMultiBuffering_generated_primeKernels.cu.obj.depend
-C:/Users/Quentin/Github/RaytraceCollisions/OptiX/SDK/primeMultiBuffering/CMakeLists.txt

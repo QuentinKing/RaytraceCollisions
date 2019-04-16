@@ -334,3 +334,6 @@ OptiX/include
 OptiX/bin64/
 OptiX/doc/
 OptiX/lib64/
+
+#CMake generated files
+OptiX/src/build
