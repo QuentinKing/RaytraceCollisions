@@ -86,4 +86,23 @@ public:
 		}
 		return quaternion;
 	}
+
+	static inline Matrix3x3 Matrix3Inverse(Matrix3x3 mat)
+	{
+		Matrix3x3 dst;
+		const float* m   = mat.getData();
+		const float d = 1.0f / mat.det();
+
+		dst[0] = d * (m[4] * m[8] - m[7] * m[5]);
+		dst[1] = d * (m[2] * m[7] - m[1] * m[8]);
+		dst[2] = d * (m[1] * m[5] - m[2] * m[4]);
+		dst[3] = d * (m[5] * m[6] - m[3] * m[8]);
+		dst[4] = d * (m[0] * m[8] - m[2] * m[6]);
+		dst[5] = d * (m[3] * m[2] - m[0] * m[5]);
+		dst[6] = d * (m[3] * m[7] - m[6] * m[4]);
+		dst[7] = d * (m[6] * m[1] - m[0] * m[7]);
+		dst[8] = d * (m[0] * m[4] - m[3] * m[1]);
+
+		return dst;
+	}
 };

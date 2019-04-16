@@ -330,6 +330,7 @@ ASALocalRun/
 .mfractor/
 
 # SDK
+OptiX/include
 OptiX/bin64/
 OptiX/doc/
 OptiX/lib64/

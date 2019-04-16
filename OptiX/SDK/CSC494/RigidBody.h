@@ -7,19 +7,9 @@
 
 #include <sutil.h>
 
+#include "MathHelpers.h"
+
 using namespace optix;
-
-struct PlaneData
-{
-	float3 point;
-	float3 normal;
-
-	PlaneData(float3 point, float3 normal) :
-		point(point),
-		normal(normal)
-	{
-	}
-};
 
 class RigidBody
 {
@@ -45,7 +35,7 @@ public:
 
 		// Init state
 		inertiaBody = make_matrix3x3(Matrix4x4::identity());
-		inertiaBodyInv = inertiaBody.mat3inverse();
+		inertiaBodyInv = MathHelpers::Matrix3Inverse(inertiaBody);
 
 		position = startingPosition;
 		quaternion = make_float4(1.0f, 0.0f, 0.0f, 0.0f);
