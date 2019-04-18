@@ -24,62 +24,8 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
 
-# Welcome to the OptiX SDK build.  We have chosen CMake, because it can generate multiple
-# build systems for multiple architectures from a single script.  There are many resources
-# for CMake on-line at http://www.cmake.org and their wiki page,
-# http://www.cmake.org/Wiki/CMake, in addition to the documentation that comes with the
-# distribution.  There is also a book available if you wish to delve more deeply into
-# various topics.
-
-# If you wish to create your own project and use the SDK as a template there are a number
-# of things you should do.
-#
-# 1. You should copy the contents of the SDK to a place of your choice.
-# 
-# 2. You can remove any sample's directory you don't wish to build.  Be careful about
-#    the following directories.
-#
-#    a. CMake - contains helper scripts that make this all work.  You should keep this.
-#
-#    b. sutil and putil 
-#              - Almost all of the samples make use of this shared code one way or another, so
-#               you should probably keep them until you have your own frameowrk for your
-#               code.
-#
-#    d. data  - This directory contains the cow.obj file used as an example for
-#               many of the samples.  You can move cow.obj anywhere as long as
-#               you fix all the file paths in the samples you wish to use it in.
-#
-# 3. You should update the list of sub directories that CMake needs to process below (look
-#    for the comment "List of samples found in subdirectories.")
-#
-
-# The basic flow of execution of this file is to do the following.
-#
-# 1. Setup the project and other global settings.  This involves processing some helper
-#    scripts.
-# 
-# 2. Look for external dependencies, such as glut, DirectX, CUDA, and OptiX.
-#
-# 3. Process all the subdirectories' CMakeLists.txt files.  These files create all the
-#    executable and library targets that are used to build the SDK.
-#
-# 4. As a convenience on Windows, copy the OptiX dlls into the build directories, so OptiX
-#    doesn't have to be in the path to run the samples.
-#
-# 5. Set a CMake variable that indicates we have configured for the first time.  This
-#    allows us to override and set varibles' defaults while allowing them to be modified
-#    later.
-
-# If you have any questions, don't feel shy about posting to the OptiX forums:
-# https://devtalk.nvidia.com/default/board/90/
-
-
-# This sets up the name of our project.  For our purposes the main thing this controls is
-# the name of the VS solution file.
-project(OptiX-Samples)
+project(RaytraceCollisions)
 
 # This enforces a particular version of CMake that we require to process the script files
 # properly.
