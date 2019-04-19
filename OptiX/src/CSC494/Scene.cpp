@@ -174,13 +174,13 @@ void Scene::CreateScene()
 
 	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, mat1);
-	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, -20.0f));
+	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 15.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, -150.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -4.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, 20.0f));
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -15.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, 150.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	//GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
@@ -242,7 +242,7 @@ void Scene::CreateLights()
 
 void Scene::SetupCamera()
 {
-	camera_eye = make_float3(7.0f, 9.2f, -6.0f);
+	camera_eye = make_float3(7.0f, 9.2f, -6.0f) * 10.0;
 	camera_lookat = make_float3(0.0f, 4.0f, 0.0f);
 	camera_up = make_float3(0.0f, 1.0f, 0.0f);
 
@@ -306,7 +306,7 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 5000000.0f;
+	float k = 250.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;
@@ -315,17 +315,17 @@ void Scene::ResolveCollisions()
 		IntersectionResponse response = responseData[i];
 		if (responseData[i].volume > 0.00001f)
 		{
-			float volumeConstraint = response.volume * response.volume;
+			float volumeConstraint = response.volume;
 
 			// Apply force at collision entry
-			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+			sceneRigidBodies[response.entryId].AddImpulseAtPosition(-response.entryNormal * volumeConstraint * k, response.entryPoint);
 			int otherId = response.collisionId == response.entryId ? response.exitId : response.collisionId;
-			sceneRigidBodies[otherId].AddImpulseAtPosition(response.entryNormal * volumeConstraint * k / 2.0, response.entryPoint);
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.entryNormal * volumeConstraint * k, response.entryPoint);
 
 			// Apply force at collision exit
-			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+			sceneRigidBodies[response.exitId].AddImpulseAtPosition(-response.exitNormal * volumeConstraint * k, response.exitPoint);
 			otherId = response.collisionId;
-			sceneRigidBodies[otherId].AddImpulseAtPosition(response.exitNormal * volumeConstraint * k / 2.0, response.exitPoint);
+			sceneRigidBodies[otherId].AddImpulseAtPosition(response.exitNormal * volumeConstraint * k, response.exitPoint);
 
 			volume += response.volume;
 		}
