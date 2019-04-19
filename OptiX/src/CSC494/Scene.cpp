@@ -168,7 +168,7 @@ void Scene::CreateScene()
 	// Create root scene group
 	Group sceneGroup = context->createGroup();
 
-	MaterialProperties mat1 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.3f, 0.3f, 0.3f), make_float3(0.9f, 0.9f, 0.9f), 300.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.9f, 0.9f, 0.9f));
+	MaterialProperties mat1 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.3f, 0.3f, 0.3f), make_float3(0.9f, 0.9f, 0.9f), 88.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.3f, 0.3f, 0.3f));
 	MaterialProperties mat2 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.8f, 0.2f, 0.8f), make_float3(0.8f, 0.9f, 0.8f), 88.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.1f, 0.1f, 0.1f));
 	MaterialProperties mat3 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.3f, 0.7f, 0.5f), make_float3(0.9f, 0.9f, 0.9f), 88.0f, make_float3(0.0f, 0.0f, 0.0f), make_float3(0.0f, 0.0f, 0.0f));
 
@@ -188,9 +188,9 @@ void Scene::CreateScene()
 	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
 	//sceneRigidBodies.push_back(rigidBody);
 
-	//GeometryInstance mesh = geometryCreator.CreateMesh(std::string(sutil::samplesDir()) + "data/cow.obj", mat3);
-	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
-	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
+	//GeometryInstance mesh = geometryCreator.CreateMesh(std::string(sutil::samplesDir()) + "/data/cow.obj", mat3);
+	//RigidBody rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 0, make_float3(1.5f, 2.0f, -9.0f), 1.0f, "Trbvh", false, false);
+	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 70.0f));
 	//sceneRigidBodies.push_back(rigidBody);
 
 	// Set up scene group
@@ -226,7 +226,7 @@ void Scene::CreateLights()
 {
 	Light lights[] =
 	{
-        { make_float3( 20.0f, 20.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
+        { make_float3( -20.0f, 20.0f, 0.0f ), make_float3( 1.0f, 1.0f, 1.0f ), 1 }
     };
 
     Buffer light_buffer = context->createBuffer( RT_BUFFER_INPUT );
@@ -242,7 +242,7 @@ void Scene::CreateLights()
 
 void Scene::SetupCamera()
 {
-	camera_eye = make_float3(7.0f, 9.2f, -6.0f) * 10.0;
+	camera_eye = make_float3(-7.0f, 9.2f, 6.0f);
 	camera_lookat = make_float3(0.0f, 4.0f, 0.0f);
 	camera_up = make_float3(0.0f, 1.0f, 0.0f);
 
@@ -306,7 +306,7 @@ void Scene::ResolveCollisions()
 {
 	Buffer responseBuffer = GetResponseBuffer();
 	float volume = 0.0f;
-	float k = 250.0f;
+	float k = 100.0f;
 
 	IntersectionResponse* responseData = (IntersectionResponse*)responseBuffer->map();
 	int physicsPixels = width * height / physicsRayStep / physicsRayStep;

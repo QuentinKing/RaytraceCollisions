@@ -74,6 +74,13 @@ void CheckIntersectionOverlap(PerRayData_radiance prd, float3 ray_origin, float3
 	// Right now, just store the largest intersection volume into the buffer
 	IntersectionResponse largestResponse;
 	largestResponse.volume = 0.0f;
+	largestResponse.entryId = 0;
+	largestResponse.entryNormal = make_float3(0.0, 0.0, 0.0);
+	largestResponse.exitId = 0;
+	largestResponse.exitNormal = make_float3(0.0, 0.0, 0.0);
+	largestResponse.entryPoint = make_float3(0.0, 0.0, 0.0);
+	largestResponse.exitPoint = make_float3(0.0, 0.0, 0.0);
+	largestResponse.collisionId = 0;
 	IntersectionData objectsInside[5]; // Assume we will never have more than 5 bodies intersecting at any given point
 	int insideIndex = 0;
 
