@@ -138,7 +138,7 @@ void Scene::CreateContext()
 
 	// Miss program
 	context->setMissProgram(0, context->createProgramFromPTXString(scene_ptx, "miss"));
-	const std::string texpath = "C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\src\\data\\Rathaus.hdr";
+	const std::string texpath = std::string(sutil::samplesDir()) + "/data/Rathaus.hdr";
     context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, make_float3(1.0, 1.0, 1.0)));
 
 	// Exception program
@@ -188,7 +188,7 @@ void Scene::CreateScene()
 	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
 	//sceneRigidBodies.push_back(rigidBody);
 
-	//GeometryInstance mesh = geometryCreator.CreateMesh("C:\\Users\\Quentin\\Github\\RaytraceCollisions\\OptiX\\src\\data\\cow.obj", mat3);
+	//GeometryInstance mesh = geometryCreator.CreateMesh(std::string(sutil::samplesDir()) + "data/cow.obj", mat3);
 	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 1, make_float3(1.5f, 2.0f, -4.0f), 1.0f, "Trbvh", false, false);
 	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 50.0f));
 	//sceneRigidBodies.push_back(rigidBody);

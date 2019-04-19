@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Updated sphere intersection to write intersection data as well
+
 #include <optix_world.h>
 #include "RayStructs.h"
 

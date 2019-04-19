@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Updated triangle mesh intersection to write intersection data as well
+
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
 #include <optixu/optixu_matrix_namespace.h>
@@ -36,10 +38,6 @@
 #include "RayStructs.h"
 
 using namespace optix;
-
-// This is to be plugged into an RTgeometry object to represent
-// a triangle mesh with a vertex buffer of triangle soup (triangle list)
-// with an interleaved position, normal, texturecoordinate layout.
 
 rtBuffer<float3> vertex_buffer;     
 rtBuffer<float3> normal_buffer;
