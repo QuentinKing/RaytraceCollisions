@@ -171,27 +171,50 @@ void Scene::CreateScene()
 	MaterialProperties mat1 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.3f, 0.3f, 0.3f), make_float3(0.9f, 0.9f, 0.9f), 88.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.3f, 0.3f, 0.3f));
 	MaterialProperties mat2 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.8f, 0.2f, 0.8f), make_float3(0.8f, 0.9f, 0.8f), 88.0f, make_float3(0.2f, 0.2f, 0.2f), make_float3(0.1f, 0.1f, 0.1f));
 	MaterialProperties mat3 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.1f, 0.1f), make_float3(0.3f, 0.7f, 0.5f), make_float3(0.9f, 0.9f, 0.9f), 88.0f, make_float3(0.0f, 0.0f, 0.0f), make_float3(0.0f, 0.0f, 0.0f));
+	MaterialProperties mat4 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.5f, 0.4f, 0.1f), make_float3(0.9f, 0.9f, 0.9f), 30.0f, make_float3(0.1f, 0.1f, 0.1f), make_float3(0.1f, 0.1f, 0.1f));
+	MaterialProperties mat5 = MaterialProperties("closest_hit_radiance", make_float3(0.1f, 0.0f, 0.1f), make_float3(0.9f, 0.5f, 0.3f), make_float3(0.3f, 0.5f, 0.9f), 10.0f, make_float3(0.1f, 0.1f, 0.1f), make_float3(0.1f, 0.1f, 0.1f));
+	MaterialProperties mat6 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.3f), make_float3(0.2f, 0.5f, 0.3f), make_float3(0.3f, 0.5f, 0.9f), 10.0f, make_float3(0.5f, 0.5f, 0.5f), make_float3(0.3f, 0.0f, 0.0f));
+	MaterialProperties mat7 = MaterialProperties("closest_hit_radiance", make_float3(0.0f, 0.0f, 0.0f), make_float3(0.5f, 0.5f, 0.1f), make_float3(0.0f, 0.0f, 0.9f), 1.0f, make_float3(0.5f, 0.5f, 0.5f), make_float3(0.0f, 0.0f, 0.7f));
 
 	// Create rigidbodies
 	GeometryInstance sphereInstance = geometryCreator.CreateSphere(3.0f, mat1);
-	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 15.0f), 1.0f, "NoAccel", false, false);
-	rigidBody.AddForce(make_float3(0.0f, 0.0f, -150.0f));
+	RigidBody rigidBody(context, PROJECT_NAME, SCENE_NAME, sphereInstance, 0, make_float3(0.0f, 4.0, 15.0f), 2.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, 0.0f, -450.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
 	GeometryInstance boxInstance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
 	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, boxInstance, 1, make_float3(0.5f, 6.0f, -15.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddTorque(make_float3(1.16f, -0.01f, -0.07f));
 	rigidBody.AddForce(make_float3(0.0f, 0.0f, 150.0f));
 	sceneRigidBodies.push_back(rigidBody);
 
-	//GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat2);
-	//rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 6.0f, 0.0f), 1.0f, "NoAccel", false, false);
-	//rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
-	//sceneRigidBodies.push_back(rigidBody);
+	GeometryInstance box2Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat3);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box2Instance, 2, make_float3(-5.5f, 1.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddTorque(make_float3(0.1f, 0.03f, -0.04f));
+	rigidBody.AddForce(make_float3(55.0f, 0.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
 
-	//GeometryInstance mesh = geometryCreator.CreateMesh(std::string(sutil::samplesDir()) + "/data/cow.obj", mat3);
-	//RigidBody rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, mesh, 0, make_float3(1.5f, 2.0f, -9.0f), 1.0f, "Trbvh", false, false);
-	//rigidBody.AddForce(make_float3(0.0f, 0.0f, 70.0f));
-	//sceneRigidBodies.push_back(rigidBody);
+	GeometryInstance sphere2Instance = geometryCreator.CreateSphere(2.0f, mat4);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, sphere2Instance, 3, make_float3(0.0f, 10.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(0.0f, -120.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	GeometryInstance box3Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat5);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box3Instance, 4, make_float3(-15.0f, 2.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddTorque(make_float3(-0.1f, -0.03f, 0.04f));
+	rigidBody.AddForce(make_float3(155.0f, 0.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
+
+	GeometryInstance sphere3Instance = geometryCreator.CreateSphere(4.0f, mat6);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, sphere3Instance, 5, make_float3(20.0f, 20.0f, 20.0f), 4.0f, "NoAccel", false, false);
+	rigidBody.AddForce(make_float3(-600.0f, -500.0f, -500.0f) * 2.0f);
+	sceneRigidBodies.push_back(rigidBody);
+
+	GeometryInstance box4Instance = geometryCreator.CreateBox(make_float3(3.0f, 3.0f, 3.0f), mat7);
+	rigidBody = RigidBody(context, PROJECT_NAME, SCENE_NAME, box4Instance, 6, make_float3(0.5f, -45.0f, 0.0f), 1.0f, "NoAccel", false, false);
+	rigidBody.AddTorque(make_float3(0.16f, -0.01f, -1.07f));
+	rigidBody.AddForce(make_float3(0.0f, 450.0f, 0.0f));
+	sceneRigidBodies.push_back(rigidBody);
 
 	// Set up scene group
 	sceneGroup->setChildCount(sceneRigidBodies.size());
@@ -242,7 +265,7 @@ void Scene::CreateLights()
 
 void Scene::SetupCamera()
 {
-	camera_eye = make_float3(-7.0f, 9.2f, 6.0f);
+	camera_eye = make_float3(-7.0f, 9.2f, 6.0f) * 3.0;
 	camera_lookat = make_float3(0.0f, 4.0f, 0.0f);
 	camera_up = make_float3(0.0f, 1.0f, 0.0f);
 

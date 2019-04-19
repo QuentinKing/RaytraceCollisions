@@ -297,6 +297,10 @@ RT_PROGRAM void closest_hit_radiance()
 				if (nDh > 0)
 					color += specularColorIntensity * Lc * pow(nDh, specularPower);
 			}
+			else
+			{
+				return;
+			}
 		}
 	}
 
