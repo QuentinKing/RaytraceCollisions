@@ -1,6 +1,9 @@
 # Raytrace Collisions
 This repo is the source code I wrote for my CSC494 project course at the University of Toronto. This project is a novel approach to computing collision detection and response between rigidbodies by doing image based collision detection at the same time as a scene is rendered through raytracing. Essentially, we perform rendering and collision detection at the same time, by calculating the volume between objects in the scene using the same rays we are already casting for rendering. By specifying a soft volume contrainst, we get an approximated collision response with little overhead. Written using NVIDIA's raytracing engine OptiX.
 
+### Reference Video
+Check out some of the collision responses in action! https://www.youtube.com/watch?v=DVNYyMbgs4A&feature=youtu.be
+
 ### Dependencies 
 To run this project you'll still you download / install a few dependencies:
   
