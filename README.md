@@ -18,5 +18,5 @@ CMake: https://cmake.org/download/
 - Configure and generate the project for Visual Studio, open the generated solution file and run the 'CSC494' project
   
 ### Special Thanks
-My supervising professor, David Levin (http://diwlevin.webfactional.com/researchdb/)  
+My supervising professor, David Levin  
 HDR Skybox courtsey of Greg Zaal and https://hdrihaven.com  
